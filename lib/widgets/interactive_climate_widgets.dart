@@ -103,16 +103,16 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
           Stack(
             clipBehavior: Clip.none,
             children: [
-              // 1. Chassis Outer Shell
+              // 1. Chassis Outer Shell (Luxury Obsidian Piano Black Edition)
               Container(
                 width: double.infinity,
                 height: 120,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFFFFFFFF),
-                      Color(0xFFF8FAFC),
-                      Color(0xFFF1F5F9),
+                      Color(0xFF242E40), // Top bevel titanium reflection
+                      Color(0xFF131824), // Sleek obsidian body
+                      Color(0xFF090D16), // Deep midnight black base
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -123,19 +123,19 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                     bottomLeft: Radius.circular(14),
                     bottomRight: Radius.circular(14),
                   ),
-                  border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
+                  border: Border.all(color: const Color(0xFF334155), width: 1.2),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF0F172A).withValues(alpha: 0.08),
-                      blurRadius: 24,
+                      color: Colors.black.withValues(alpha: 0.30),
+                      blurRadius: 22,
                       offset: const Offset(0, 10),
                     ),
                     BoxShadow(
                       color: widget.isOn
-                          ? const Color(0xFF0284C7).withValues(alpha: 0.15)
+                          ? const Color(0xFF00E5FF).withValues(alpha: 0.22)
                           : Colors.transparent,
-                      blurRadius: 35,
-                      offset: const Offset(0, 15),
+                      blurRadius: 36,
+                      offset: const Offset(0, 14),
                     ),
                   ],
                 ),
@@ -153,7 +153,7 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                             margin: const EdgeInsets.only(bottom: 2.5),
                             height: 1.2,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFE2E8F0),
+                              color: const Color(0xFF1E293B),
                               borderRadius: BorderRadius.circular(1),
                             ),
                           ),
@@ -161,7 +161,7 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                       ),
                     ),
 
-                    // Chrome Horizontal Trim Accent
+                    // Chrome Horizontal Trim Accent (Mirror Platinum Reflection)
                     Positioned(
                       top: 24,
                       left: 0,
@@ -172,11 +172,14 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                           gradient: LinearGradient(
                             colors: [
                               Colors.transparent,
-                              Color(0xFFCBD5E1),
-                              Color(0xFFFFFFFF),
-                              Color(0xFFCBD5E1),
+                              Color(0xFF475569),
+                              Color(0xFF94A3B8),
+                              Color(0xFFF8FAFC),
+                              Color(0xFF94A3B8),
+                              Color(0xFF475569),
                               Colors.transparent,
                             ],
+                            stops: [0.0, 0.15, 0.45, 0.5, 0.55, 0.85, 1.0],
                           ),
                         ),
                       ),
@@ -194,13 +197,21 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: widget.isOn
-                                  ? const Color(0xFF0284C7)
-                                  : const Color(0xFF94A3B8),
+                                  ? const Color(0xFF00E5FF)
+                                  : const Color(0xFF334155),
+                              boxShadow: widget.isOn
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
+                                        blurRadius: 8,
+                                      ),
+                                    ]
+                                  : null,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.ac_unit_rounded,
                               size: 10,
-                              color: Colors.white,
+                              color: widget.isOn ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
                             ),
                           ),
                           const SizedBox(width: 6),
@@ -210,14 +221,14 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                               Text(
                                 'CLIMASMART',
                                 style: GoogleFonts.plusJakartaSans(
-                                  color: const Color(0xFF475569),
+                                  color: const Color(0xFFF1F5F9),
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1.2,
                                 ),
                               ),
                               Text(
-                                'INVERTER DUAL-COOL',
+                                'BLACK EDITION DUAL-COOL',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: const Color(0xFF94A3B8),
                                   fontSize: 6.5,
@@ -246,12 +257,12 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                               shape: BoxShape.circle,
                               color: widget.isOn
                                   ? const Color(0xFF10B981)
-                                  : const Color(0xFFCBD5E1),
+                                  : const Color(0xFF334155),
                               boxShadow: widget.isOn
                                   ? [
                                       BoxShadow(
                                         color: const Color(0xFF10B981)
-                                            .withValues(alpha: 0.8),
+                                            .withValues(alpha: 0.9),
                                         blurRadius: 8,
                                         spreadRadius: 2,
                                       ),
@@ -261,18 +272,24 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                           ),
                           const SizedBox(width: 12),
 
-                          // Concealed LED Glow Screen
+                          // Concealed LED Glow Screen (Smoked Glass Digital Display)
                           AnimatedOpacity(
                             duration: const Duration(milliseconds: 400),
-                            opacity: widget.isOn ? 1.0 : 0.15,
+                            opacity: widget.isOn ? 1.0 : 0.2,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 3),
                               decoration: BoxDecoration(
                                 color: widget.isOn
-                                    ? const Color(0xFF0369A1).withValues(alpha: 0.08)
-                                    : Colors.transparent,
+                                    ? const Color(0xFF00E5FF).withValues(alpha: 0.1)
+                                    : const Color(0xFF1E293B).withValues(alpha: 0.3),
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: widget.isOn
+                                      ? const Color(0xFF00E5FF).withValues(alpha: 0.35)
+                                      : Colors.transparent,
+                                  width: 0.8,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -282,11 +299,19 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                                     displayTemp,
                                     style: GoogleFonts.orbitron(
                                       color: widget.isOn
-                                          ? const Color(0xFF0284C7)
-                                          : const Color(0xFF94A3B8),
+                                          ? const Color(0xFF00E5FF)
+                                          : const Color(0xFF475569),
                                       fontSize: 22,
                                       fontWeight: FontWeight.w800,
                                       letterSpacing: -1,
+                                      shadows: widget.isOn
+                                          ? [
+                                              Shadow(
+                                                color: const Color(0xFF00E5FF).withValues(alpha: 0.7),
+                                                blurRadius: 10,
+                                              ),
+                                            ]
+                                          : null,
                                     ),
                                   ),
                                   const SizedBox(width: 4),
@@ -294,8 +319,8 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                                     Icons.air_rounded,
                                     size: 14,
                                     color: widget.isOn
-                                        ? const Color(0xFF0284C7)
-                                        : const Color(0xFF94A3B8),
+                                        ? const Color(0xFF00E5FF)
+                                        : const Color(0xFF475569),
                                   ),
                                 ],
                               ),
@@ -313,7 +338,7 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                       child: Container(
                         height: 12,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF0F172A),
+                          color: Color(0xFF020617),
                           borderRadius: BorderRadius.only(
                             bottomLeft: Radius.circular(10),
                             bottomRight: Radius.circular(10),
@@ -325,7 +350,7 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                 ),
               ),
 
-              // 2. Animated Motorized Bottom Louver Flap
+              // 2. Animated Motorized Bottom Louver Flap (Black Edition)
               Positioned(
                 left: 14,
                 right: 14,
@@ -343,16 +368,16 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                         height: 14,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFFE2E8F0), Color(0xFFFFFFFF), Color(0xFFCBD5E1)],
+                            colors: [Color(0xFF334155), Color(0xFF1E293B), Color(0xFF090D16)],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFF94A3B8), width: 0.8),
+                          border: Border.all(color: const Color(0xFF475569), width: 0.8),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: openProgress * 0.2),
-                              blurRadius: 6,
+                              color: Colors.black.withValues(alpha: openProgress * 0.4),
+                              blurRadius: 8,
                               offset: Offset(0, openProgress * 4),
                             ),
                           ],
@@ -362,7 +387,7 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                             width: 40,
                             height: 1.5,
                             decoration: BoxDecoration(
-                              color: const Color(0xFF94A3B8),
+                              color: const Color(0xFF64748B),
                               borderRadius: BorderRadius.circular(1),
                             ),
                           ),
@@ -428,8 +453,8 @@ class _CoolBreezePainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            const Color(0xFF0284C7).withValues(alpha: 0.6 * opacity * (1.0 - waveOffset)),
-            const Color(0xFF38BDF8).withValues(alpha: 0.4 * opacity * (1.0 - waveOffset)),
+            const Color(0xFF00E5FF).withValues(alpha: 0.75 * opacity * (1.0 - waveOffset)),
+            const Color(0xFF38BDF8).withValues(alpha: 0.5 * opacity * (1.0 - waveOffset)),
             Colors.white.withValues(alpha: 0.0),
           ],
         ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -453,7 +478,7 @@ class _CoolBreezePainter extends CustomPainter {
       final particleY = startY + (endY - startY) * waveOffset;
       final particleX = currentX + (12 * math.sin(waveOffset * math.pi * 4));
       final particlePaint = Paint()
-        ..color = const Color(0xFF0EA5E9).withValues(alpha: 0.5 * opacity * (1.0 - waveOffset))
+        ..color = const Color(0xFF00E5FF).withValues(alpha: 0.65 * opacity * (1.0 - waveOffset))
         ..style = PaintingStyle.fill;
       canvas.drawCircle(Offset(particleX, particleY), 2.0 * (1.0 - waveOffset), particlePaint);
     }
