@@ -19,11 +19,11 @@ class AppTheme {
   static const Color danger = Color(0xFFEF4444);         // Clean Coral Red
   static const Color dangerLight = Color(0xFFFEF2F2);
 
-  // ─── Backgrounds & Surfaces (Crisp & Clean) ───────────────────────────────
-  static const Color scaffoldBg = Color(0xFFF8FAFC);     // Slate 50 (Soft light background)
-  static const Color cardBg = Color(0xFFFFFFFF);         // Pure White Cards
-  static const Color surface = Color(0xFFF1F5F9);        // Slate 100 (Subtle dividers & chips)
-  static const Color border = Color(0xFFE2E8F0);         // Slate 200 (Clean hairline borders)
+  // ─── Backgrounds & Surfaces (Luxury Warm Platinum / Titanium Light) ──────
+  static const Color scaffoldBg = Color(0xFFEBF0F5);     // Luxury Platinum Mist (Rich, not stark white)
+  static const Color cardBg = Color(0xFFFFFFFF);         // Pure elevated white surface
+  static const Color surface = Color(0xFFE2E8F0);        // Platinum Slate 200
+  static const Color border = Color(0xFFCBD5E1);         // Refined definition border
   
   // ─── Typography Colors ───────────────────────────────────────────────────
   static const Color textPrimary = Color(0xFF0F172A);    // Slate 900 (High contrast, readable)

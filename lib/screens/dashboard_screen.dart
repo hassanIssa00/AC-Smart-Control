@@ -6,6 +6,7 @@ import '../models/sensor_data.dart';
 import '../services/bluetooth_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
+import '../widgets/interactive_climate_widgets.dart';
 import 'water_level_screen.dart';
 import 'ac_control_screen.dart';
 import 'bluetooth_screen.dart';
@@ -85,108 +86,25 @@ class DashboardScreen extends StatelessWidget {
 
               const SizedBox(height: 20),
 
-              // ── Gauges Row (Temperature & Humidity) ──────────────────────
+              // ── Interactive Climate Telemetry Row (Temperature & Humidity) ──
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppTheme.border),
-                        boxShadow: AppTheme.cardShadow,
-                      ),
-                      child: Column(
-                        children: [
-                          GlowGauge(
-                            key: ValueKey('T-${sensor.hasRealTelemetry ? sensor.temperature.toStringAsFixed(1) : "off"}'),
-                            value: sensor.hasRealTelemetry ? sensor.temperature : 0.0,
-                            displayValue: sensor.hasRealTelemetry ? sensor.temperature.toStringAsFixed(1) : '--',
-                            min: 0,
-                            max: 50,
-                            label: 'TEMPERATURE',
-                            unit: '°C',
-                            color: sensor.hasRealTelemetry ? _tempColor(sensor.temperature) : AppTheme.textMuted,
-                            size: 136,
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.thermostat_rounded,
-                                size: 16,
-                                color: sensor.hasRealTelemetry ? _tempColor(sensor.temperature) : AppTheme.textMuted,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                sensor.hasRealTelemetry
-                                    ? _tempStatusText(sensor.temperature)
-                                    : 'Awaiting Hardware',
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    child: InteractiveTemperatureCard(
+                      temperature: sensor.temperature,
+                      isConnected: sensor.isConnected,
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        border: Border.all(color: AppTheme.border),
-                        boxShadow: AppTheme.cardShadow,
-                      ),
-                      child: Column(
-                        children: [
-                          GlowGauge(
-                            key: ValueKey('H-${sensor.hasRealTelemetry ? sensor.humidity.toStringAsFixed(1) : "off"}'),
-                            value: sensor.hasRealTelemetry ? sensor.humidity : 0.0,
-                            displayValue: sensor.hasRealTelemetry ? sensor.humidity.toStringAsFixed(1) : '--',
-                            min: 0,
-                            max: 100,
-                            label: 'HUMIDITY',
-                            unit: '%',
-                            color: sensor.hasRealTelemetry ? AppTheme.primary : AppTheme.textMuted,
-                            size: 136,
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.water_drop_rounded,
-                                size: 16,
-                                color: sensor.hasRealTelemetry ? AppTheme.primary : AppTheme.textMuted,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                sensor.hasRealTelemetry
-                                    ? _humidityStatusText(sensor.humidity)
-                                    : 'Awaiting Hardware',
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    child: InteractiveHumidityCard(
+                      humidity: sensor.humidity,
+                      isConnected: sensor.isConnected,
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1),
+              ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.08),
 
               const SizedBox(height: 14),
 
@@ -325,26 +243,6 @@ class DashboardScreen extends StatelessWidget {
   }
 
   // ─── Helpers ─────────────────────────────────────────────────────────────
-
-  Color _tempColor(double temp) {
-    if (temp < 21) return const Color(0xFF0284C7);
-    if (temp < 28) return const Color(0xFF10B981);
-    if (temp < 34) return const Color(0xFFF59E0B);
-    return const Color(0xFFEF4444);
-  }
-
-  String _tempStatusText(double temp) {
-    if (temp < 21) return 'Cool Chill';
-    if (temp < 28) return 'Comfort Zone';
-    if (temp < 34) return 'Warm Room';
-    return 'Hot Alert';
-  }
-
-  String _humidityStatusText(double hum) {
-    if (hum < 40) return 'Dry Air';
-    if (hum < 65) return 'Optimal Comfort';
-    return 'Humid Moisture';
-  }
 
   String _heatIndex(double t, double h) {
     final hi = -8.78469475556 +
@@ -626,7 +524,27 @@ class _MasterAcControlCard extends StatelessWidget {
             ),
           ],
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
+
+          // Realistic Interactive Split AC Indoor Unit
+          RealisticSplitAcUnit(
+            isOn: isOn,
+            canControl: canControl,
+            temperature: sensor.temperature,
+            onTogglePower: () {
+              if (canControl) {
+                if (isOn) {
+                  sensor.turnACOff();
+                  bt.sendCommand('AC:OFF');
+                } else {
+                  sensor.turnACOn();
+                  bt.sendCommand('AC:ON');
+                }
+              }
+            },
+          ),
+
+          const SizedBox(height: 16),
 
           // Two Modern Action Pills: Turn ON & Turn OFF
           Row(
@@ -840,8 +758,15 @@ class _SystemStatusCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isCritical = sensor.waterLevel == WaterLevel.critical;
-    final color = isCritical ? AppTheme.danger : AppTheme.primary;
-    final bg = isCritical ? AppTheme.dangerLight : AppTheme.primaryLight;
+    final color = !sensor.isConnected
+        ? const Color(0xFF64748B)
+        : (isCritical ? AppTheme.danger : AppTheme.success);
+    final bg = !sensor.isConnected
+        ? const Color(0xFFF1F5F9)
+        : (isCritical ? AppTheme.dangerLight : AppTheme.successLight);
+    final icon = !sensor.isConnected
+        ? Icons.bluetooth_disabled_rounded
+        : (isCritical ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded);
 
     return Container(
       width: double.infinity,
@@ -854,7 +779,7 @@ class _SystemStatusCard extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            isCritical ? Icons.error_outline_rounded : Icons.check_circle_outline_rounded,
+            icon,
             color: color,
             size: 18,
           ),

@@ -6,6 +6,7 @@ import '../models/sensor_data.dart';
 import '../services/bluetooth_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
+import '../widgets/interactive_climate_widgets.dart';
 
 class AcControlScreen extends StatelessWidget {
   final bool isEmbedded;
@@ -85,8 +86,56 @@ class AcControlScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    // Critical Lock Warning
-                    if (!canControl)
+                    // Connection / Safety Status Warning
+                    if (!sensor.isConnected)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppTheme.border),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFE2E8F0),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.bluetooth_disabled_rounded,
+                                  color: AppTheme.textSecondary, size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'HARDWARE OFFLINE',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: AppTheme.textPrimary,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Connect Bluetooth to engage relay and control AC compressor.',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else if (sensor.waterLevel == WaterLevel.critical)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
@@ -138,12 +187,23 @@ class AcControlScreen extends StatelessWidget {
                         ),
                       ).animate().fadeIn().shake(hz: 3, offset: const Offset(4, 0)),
 
-                    // Modern Luxury AC Unit Visualizer
-                    _ModernAcVisual(
+                    // Realistic Interactive Split AC Unit Visualizer
+                    RealisticSplitAcUnit(
                       isOn: sensor.acOn,
                       canControl: canControl,
                       temperature: sensor.temperature,
-                    ).animate().fadeIn(delay: 150.ms).scale(begin: const Offset(0.95, 0.95)),
+                      onTogglePower: () {
+                        if (canControl) {
+                          if (sensor.acOn) {
+                            sensor.turnACOff();
+                            bt.sendCommand('AC:OFF');
+                          } else {
+                            sensor.turnACOn();
+                            bt.sendCommand('AC:ON');
+                          }
+                        }
+                      },
+                    ).animate().fadeIn(delay: 150.ms),
 
                     const SizedBox(height: 24),
 
@@ -274,81 +334,6 @@ class AcControlScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─── Modern Minimalist AC Visual ──────────────────────────────────────────────
-
-class _ModernAcVisual extends StatelessWidget {
-  final bool isOn;
-  final bool canControl;
-  final double temperature;
-
-  const _ModernAcVisual({
-    required this.isOn,
-    required this.canControl,
-    required this.temperature,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppTheme.border),
-        boxShadow: AppTheme.cardShadow,
-      ),
-      child: Column(
-        children: [
-          // Minimalist circular icon badge
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isOn ? AppTheme.primaryLight : const Color(0xFFF1F5F9),
-              border: Border.all(
-                color: isOn ? AppTheme.primary.withValues(alpha: 0.3) : const Color(0xFFE2E8F0),
-                width: 2,
-              ),
-            ),
-            child: Icon(
-              Icons.ac_unit_rounded,
-              size: 46,
-              color: isOn ? AppTheme.primary : AppTheme.textMuted,
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          Text(
-            isOn ? 'COOLING ACTIVE' : 'SYSTEM IDLE',
-            style: GoogleFonts.plusJakartaSans(
-              color: isOn ? AppTheme.primary : AppTheme.textSecondary,
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 1.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-
-          Text(
-            isOn
-                ? 'Relay switch engaged • Telemetry updating live'
-                : (canControl
-                    ? 'Press START AC to engage cooling'
-                    : 'System locked due to water level'),
-            style: GoogleFonts.plusJakartaSans(
-              color: AppTheme.textSecondary,
-              fontSize: 12.5,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }
