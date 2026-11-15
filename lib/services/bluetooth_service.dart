@@ -265,7 +265,7 @@ class BluetoothService extends ChangeNotifier {
       _reconnectAttempts++;
       _autoReconnecting = true;
       _statusMessage =
-          'Connection lost. Auto-reconnecting (${_reconnectAttempts}/$_maxReconnectAttempts)...';
+          'Connection lost. Auto-reconnecting ($_reconnectAttempts/$_maxReconnectAttempts)...';
       notifyListeners();
 
       _reconnectTimer = Timer(const Duration(seconds: 3), () async {

@@ -12,6 +12,7 @@ class GlowGauge extends StatelessWidget {
   final String unit;
   final Color color;
   final double size;
+  final String? displayValue;
 
   const GlowGauge({
     super.key,
@@ -22,6 +23,7 @@ class GlowGauge extends StatelessWidget {
     required this.unit,
     this.color = AppTheme.primary,
     this.size = 150,
+    this.displayValue,
   });
 
   @override
@@ -60,7 +62,7 @@ class GlowGauge extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    value.toStringAsFixed(1),
+                    displayValue ?? value.toStringAsFixed(1),
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: size * 0.22,
                       fontWeight: FontWeight.w800,
@@ -68,14 +70,15 @@ class GlowGauge extends StatelessWidget {
                       letterSpacing: -1,
                     ),
                   ),
-                  Text(
-                    unit,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: size * 0.11,
-                      fontWeight: FontWeight.w700,
-                      color: color,
+                  if (displayValue == null || displayValue != '--')
+                    Text(
+                      unit,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: size * 0.11,
+                        fontWeight: FontWeight.w700,
+                        color: color,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ],

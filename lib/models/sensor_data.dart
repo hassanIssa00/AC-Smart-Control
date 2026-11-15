@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 enum WaterLevel { normal, warning, critical }
@@ -35,30 +34,24 @@ class LogEntry {
 }
 
 class SensorData extends ChangeNotifier {
-  double _temperature = 24.5;
-  double _humidity = 58.0;
+  double _temperature = 0.0;
+  double _humidity = 0.0;
   WaterLevel _waterLevel = WaterLevel.normal;
   bool _acOn = false;
   bool _relayOn = false;
   bool _isConnected = false;
   String _connectedDevice = '';
-  String _systemStatus = 'Idle';
+  String _systemStatus = 'Offline — Connect Bluetooth';
 
   // Active Alert Notification state
   bool _hasActiveAlert = false;
   String _lastAlertMessage = '';
   DateTime? _lastAlertTime;
 
-  // Demo simulation mode (works without real hardware)
-  bool _simulationMode = false;
-  Timer? _simTimer;
-
   final List<LogEntry> _logs = [];
   int _logCounter = 0;
 
-  SensorData() {
-    _seedInitialLogs();
-  }
+  SensorData();
 
   // ─── Getters ─────────────────────────────────────────────────────────────
 
@@ -70,71 +63,29 @@ class SensorData extends ChangeNotifier {
   bool get isConnected => _isConnected;
   String get connectedDevice => _connectedDevice;
   String get systemStatus => _systemStatus;
-  bool get simulationMode => _simulationMode;
   bool get hasActiveAlert => _hasActiveAlert;
   String get lastAlertMessage => _lastAlertMessage;
   DateTime? get lastAlertTime => _lastAlertTime;
   List<LogEntry> get logs => List.unmodifiable(_logs);
+  bool get hasRealTelemetry => _isConnected && (_temperature > 0.0 || _humidity > 0.0);
+
+  String get waterLevelLabel {
+    switch (_waterLevel) {
+      case WaterLevel.normal:
+        return 'Normal';
+      case WaterLevel.warning:
+        return 'Warning';
+      case WaterLevel.critical:
+        return 'Critical';
+    }
+  }
 
   void dismissAlert() {
     _hasActiveAlert = false;
     notifyListeners();
   }
 
-  void triggerTestAlert() {
-    _hasActiveAlert = true;
-    _lastAlertMessage = '⚠️ CRITICAL LEAKAGE DETECTED! Water tank overflowing. AC auto-disabled for safety.';
-    _lastAlertTime = DateTime.now();
-    updateWaterLevel(WaterLevel.critical);
-    notifyListeners();
-  }
-
-  bool get canControlAC => _waterLevel != WaterLevel.critical;
-
-  // ─── Seed logs ────────────────────────────────────────────────────────────
-
-  void _seedInitialLogs() {
-    final now = DateTime.now();
-    final seeds = [
-      LogEntry(
-        id: _nextId(),
-        timestamp: now.subtract(const Duration(minutes: 35)),
-        temperature: 26.2,
-        humidity: 62.0,
-        waterLevel: WaterLevel.normal,
-        acState: false,
-        note: 'System booted & calibrated by Eng. Mahmoud Zayed',
-      ),
-      LogEntry(
-        id: _nextId(),
-        timestamp: now.subtract(const Duration(minutes: 28)),
-        temperature: 25.8,
-        humidity: 60.5,
-        waterLevel: WaterLevel.normal,
-        acState: true,
-        note: 'AC turned ON (Comfort Mode set to 24°C)',
-      ),
-      LogEntry(
-        id: _nextId(),
-        timestamp: now.subtract(const Duration(minutes: 18)),
-        temperature: 25.1,
-        humidity: 59.0,
-        waterLevel: WaterLevel.warning,
-        acState: true,
-        note: 'Tank Warning: Condensation water rising above 50%',
-      ),
-      LogEntry(
-        id: _nextId(),
-        timestamp: now.subtract(const Duration(minutes: 8)),
-        temperature: 24.5,
-        humidity: 58.0,
-        waterLevel: WaterLevel.normal,
-        acState: true,
-        note: 'Water drained successfully. Normal telemetry restored.',
-      ),
-    ];
-    _logs.addAll(seeds.reversed); // newest first
-  }
+  bool get canControlAC => _isConnected && _waterLevel != WaterLevel.critical;
 
   String _nextId() {
     _logCounter++;
@@ -154,7 +105,6 @@ class SensorData extends ChangeNotifier {
       note: note,
     );
     _logs.insert(0, entry);
-    // Cap at 500 entries to avoid memory growth
     if (_logs.length > 500) _logs.removeLast();
     notifyListeners();
   }
@@ -164,11 +114,11 @@ class SensorData extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ─── Sensor updates (from BT) ─────────────────────────────────────────────
+  // ─── Sensor updates (from BT telemetry stream) ───────────────────────────
 
   void updateTemperature(double val) {
-    if ((_temperature - val).abs() > 0.4) {
-      addLog('Temperature reading: ${val.toStringAsFixed(1)}°C');
+    if ((_temperature - val).abs() > 0.4 && _temperature > 0.0) {
+      addLog('Temperature: ${val.toStringAsFixed(1)}°C');
     }
     _temperature = val;
     notifyListeners();
@@ -184,26 +134,25 @@ class SensorData extends ChangeNotifier {
     _waterLevel = level;
     if (level == WaterLevel.critical) {
       _hasActiveAlert = true;
-      _lastAlertMessage = 'EMERGENCY: Water leakage / high level! AC auto-disabled to prevent damage.';
+      _lastAlertMessage = 'EMERGENCY: Water leakage detected! AC automatically stopped to prevent damage.';
       _lastAlertTime = DateTime.now();
       if (_acOn) {
         _acOn = false;
         _relayOn = false;
         _systemStatus = 'AC OFF – Water Leakage Emergency!';
-        addLog(
-            'EMERGENCY SHUTDOWN: Critical water leakage detected! AC automatically stopped.');
+        addLog('EMERGENCY SHUTDOWN: Critical water leakage detected! AC automatically stopped.');
       } else {
-        _systemStatus = 'LOCKED – Water Leakage Detected';
+        _systemStatus = 'LOCKED – Water Leakage Emergency';
         addLog('WARNING: Critical water level detected. AC control locked.');
       }
     } else if (level == WaterLevel.warning && oldLevel != WaterLevel.warning) {
       _hasActiveAlert = true;
-      _lastAlertMessage = 'WARNING: Water tank rising above 50%. Drain soon.';
+      _lastAlertMessage = 'WARNING: Water reservoir rising above 50%. Drain soon.';
       _lastAlertTime = DateTime.now();
-      addLog('Water tank warning: Level at 50-80% capacity.');
+      addLog('Water reservoir warning: Level at 50-80% capacity.');
     } else if (level == WaterLevel.normal && oldLevel != WaterLevel.normal) {
       _hasActiveAlert = false;
-      addLog('Water tank normal: System safe.');
+      addLog('Water reservoir safe: Normal level restored.');
     }
     notifyListeners();
   }
@@ -213,14 +162,17 @@ class SensorData extends ChangeNotifier {
   void setConnected(bool val, {String device = ''}) {
     _isConnected = val;
     _connectedDevice = device;
-    _systemStatus = val ? 'Connected to $device' : 'Disconnected';
-    if (!val) {
+    if (val) {
+      _systemStatus = 'Connected to $device';
+      addLog('Bluetooth connected to $device');
+    } else {
+      _systemStatus = 'Offline — Connect Bluetooth';
+      _temperature = 0.0;
+      _humidity = 0.0;
       _acOn = false;
       _relayOn = false;
+      addLog('Bluetooth disconnected');
     }
-    addLog(val
-        ? 'Bluetooth connected to $device'
-        : 'Bluetooth disconnected');
     notifyListeners();
   }
 
@@ -231,9 +183,7 @@ class SensorData extends ChangeNotifier {
     _acOn = !_acOn;
     _relayOn = _acOn;
     _systemStatus = _acOn ? 'AC Running' : 'AC Stopped';
-    addLog(_acOn
-        ? 'AC started manually via app'
-        : 'AC stopped manually via app');
+    addLog(_acOn ? 'AC started manually via app' : 'AC stopped manually via app');
     notifyListeners();
   }
 
@@ -242,59 +192,16 @@ class SensorData extends ChangeNotifier {
     _acOn = true;
     _relayOn = true;
     _systemStatus = 'AC Running';
-    addLog('AC turned ON (Relay triggered)');
+    addLog('AC turned ON (Relay energized)');
     notifyListeners();
   }
 
   void turnACOff() {
+    if (!_isConnected) return;
     _acOn = false;
     _relayOn = false;
     _systemStatus = 'AC Stopped';
     addLog('AC turned OFF (Relay cut off)');
     notifyListeners();
-  }
-
-  // ─── Simulation mode (works without real hardware) ────────────────────────
-
-  void toggleSimulationMode() {
-    _simulationMode = !_simulationMode;
-    if (_simulationMode) {
-      addLog('Demo mode activated — using simulated sensor data');
-      _startSimTimer();
-    } else {
-      _simTimer?.cancel();
-      _simTimer = null;
-      addLog('Demo mode deactivated');
-    }
-    notifyListeners();
-  }
-
-  void _startSimTimer() {
-    _simTimer?.cancel();
-    _simTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      if (!_simulationMode) {
-        _simTimer?.cancel();
-        return;
-      }
-      simulateData();
-    });
-  }
-
-  void simulateData() {
-    final t = DateTime.now();
-    _temperature = 22.0 + (t.second % 10) * 0.5;
-    _humidity = 50.0 + (t.second % 12) * 0.9;
-    // Periodic log every ~30 seconds in simulation
-    if (t.second % 30 == 0) {
-      addLog(
-          'Sim telemetry: T=${_temperature.toStringAsFixed(1)}°C H=${_humidity.toStringAsFixed(1)}%');
-    }
-    notifyListeners();
-  }
-
-  @override
-  void dispose() {
-    _simTimer?.cancel();
-    super.dispose();
   }
 }

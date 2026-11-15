@@ -229,7 +229,7 @@ class WaterLevelScreen extends StatelessWidget {
 
                     const SizedBox(height: 20),
 
-                    // Test & Simulation Controls
+                    // Hardware Telemetry & Pin Diagnostics
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -243,7 +243,7 @@ class WaterLevelScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'HARDWARE SIMULATION & TEST',
+                            'HARDWARE SENSOR TELEMETRY',
                             style: GoogleFonts.plusJakartaSans(
                               color: AppTheme.textMuted,
                               fontSize: 11,
@@ -253,42 +253,25 @@ class WaterLevelScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Tap any level below to simulate ESP32 sensor input:',
+                            'ESP32 embedded pin configuration & fail-safe link:',
                             style: GoogleFonts.plusJakartaSans(
                               color: AppTheme.textSecondary,
                               fontSize: 12,
                             ),
                           ),
                           const SizedBox(height: 14),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _SimPill(
-                                  label: 'Normal',
-                                  color: AppTheme.success,
-                                  isSelected: level == WaterLevel.normal,
-                                  onTap: () => sensor.updateWaterLevel(WaterLevel.normal),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _SimPill(
-                                  label: 'Warning',
-                                  color: AppTheme.warning,
-                                  isSelected: level == WaterLevel.warning,
-                                  onTap: () => sensor.updateWaterLevel(WaterLevel.warning),
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: _SimPill(
-                                  label: 'Critical Leak',
-                                  color: AppTheme.danger,
-                                  isSelected: level == WaterLevel.critical,
-                                  onTap: () => sensor.updateWaterLevel(WaterLevel.critical),
-                                ),
-                              ),
-                            ],
+                          _buildHardwarePinRow(
+                            pin: 'GPIO 34',
+                            label: 'Analog Probe',
+                            status: sensor.isConnected ? 'Receiving Real ADC' : 'Waiting for BT',
+                            color: sensor.isConnected ? AppTheme.primary : AppTheme.textMuted,
+                          ),
+                          const SizedBox(height: 8),
+                          _buildHardwarePinRow(
+                            pin: 'GPIO 2',
+                            label: 'Compressor Relay',
+                            status: sensor.acOn ? 'RELAY CLOSED (ON)' : 'RELAY OPEN (OFF)',
+                            color: sensor.acOn ? AppTheme.success : AppTheme.textSecondary,
                           ),
                         ],
                       ),
@@ -299,6 +282,59 @@ class WaterLevelScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHardwarePinRow({
+    required String pin,
+    required String label,
+    required String status,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.primaryLight,
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              pin,
+              style: GoogleFonts.jetBrainsMono(
+                color: AppTheme.primaryDark,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              color: AppTheme.textPrimary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const Spacer(),
+          Text(
+            status,
+            style: GoogleFonts.plusJakartaSans(
+              color: color,
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -368,45 +404,6 @@ class _ThresholdRow extends StatelessWidget {
           if (isActive)
             Icon(Icons.check_circle_rounded, color: color, size: 18),
         ],
-      ),
-    );
-  }
-}
-
-class _SimPill extends StatelessWidget {
-  final String label;
-  final Color color;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _SimPill({
-    required this.label,
-    required this.color,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? color : color.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              color: isSelected ? Colors.white : color,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
       ),
     );
   }

@@ -78,16 +78,10 @@ class DashboardScreen extends StatelessWidget {
                     .fadeIn(duration: 300.ms)
                     .slideY(begin: -0.1),
 
-              // Simulation Demo Mode Toggle
-              if (!sensor.isConnected)
-                _SimModeBanner(sensor: sensor)
-                    .animate()
-                    .fadeIn(delay: 100.ms),
-
               // System Status Capsule
               _SystemStatusCard(status: sensor.systemStatus, sensor: sensor)
                   .animate()
-                  .fadeIn(delay: 150.ms),
+                  .fadeIn(delay: 100.ms),
 
               const SizedBox(height: 20),
 
@@ -106,23 +100,30 @@ class DashboardScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           GlowGauge(
-                            key: ValueKey('T-${sensor.temperature.toStringAsFixed(1)}'),
-                            value: sensor.temperature,
+                            key: ValueKey('T-${sensor.hasRealTelemetry ? sensor.temperature.toStringAsFixed(1) : "off"}'),
+                            value: sensor.hasRealTelemetry ? sensor.temperature : 0.0,
+                            displayValue: sensor.hasRealTelemetry ? sensor.temperature.toStringAsFixed(1) : '--',
                             min: 0,
                             max: 50,
                             label: 'TEMPERATURE',
                             unit: '°C',
-                            color: _tempColor(sensor.temperature),
+                            color: sensor.hasRealTelemetry ? _tempColor(sensor.temperature) : AppTheme.textMuted,
                             size: 136,
                           ),
                           const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.thermostat_rounded, size: 16, color: _tempColor(sensor.temperature)),
+                              Icon(
+                                Icons.thermostat_rounded,
+                                size: 16,
+                                color: sensor.hasRealTelemetry ? _tempColor(sensor.temperature) : AppTheme.textMuted,
+                              ),
                               const SizedBox(width: 4),
                               Text(
-                                _tempStatusText(sensor.temperature),
+                                sensor.hasRealTelemetry
+                                    ? _tempStatusText(sensor.temperature)
+                                    : 'Awaiting Hardware',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: AppTheme.textSecondary,
                                   fontSize: 12,
@@ -148,23 +149,30 @@ class DashboardScreen extends StatelessWidget {
                       child: Column(
                         children: [
                           GlowGauge(
-                            key: ValueKey('H-${sensor.humidity.toStringAsFixed(1)}'),
-                            value: sensor.humidity,
+                            key: ValueKey('H-${sensor.hasRealTelemetry ? sensor.humidity.toStringAsFixed(1) : "off"}'),
+                            value: sensor.hasRealTelemetry ? sensor.humidity : 0.0,
+                            displayValue: sensor.hasRealTelemetry ? sensor.humidity.toStringAsFixed(1) : '--',
                             min: 0,
                             max: 100,
                             label: 'HUMIDITY',
                             unit: '%',
-                            color: AppTheme.primary,
+                            color: sensor.hasRealTelemetry ? AppTheme.primary : AppTheme.textMuted,
                             size: 136,
                           ),
                           const SizedBox(height: 12),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.water_drop_rounded, size: 16, color: AppTheme.primary),
+                              Icon(
+                                Icons.water_drop_rounded,
+                                size: 16,
+                                color: sensor.hasRealTelemetry ? AppTheme.primary : AppTheme.textMuted,
+                              ),
                               const SizedBox(width: 4),
                               Text(
-                                _humidityStatusText(sensor.humidity),
+                                sensor.hasRealTelemetry
+                                    ? _humidityStatusText(sensor.humidity)
+                                    : 'Awaiting Hardware',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: AppTheme.textSecondary,
                                   fontSize: 12,
@@ -178,7 +186,7 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 200.ms).slideY(begin: 0.1),
+              ).animate().fadeIn(delay: 150.ms).slideY(begin: 0.1),
 
               const SizedBox(height: 14),
 
@@ -191,37 +199,47 @@ class DashboardScreen extends StatelessWidget {
                       iconBg: const Color(0xFFFFF7ED),
                       iconColor: const Color(0xFFEA580C),
                       title: 'Heat Index',
-                      value: '${_heatIndex(sensor.temperature, sensor.humidity)}°C',
-                      subtitle: 'Real feel in room',
+                      value: sensor.hasRealTelemetry
+                          ? '${_heatIndex(sensor.temperature, sensor.humidity)}°C'
+                          : '--',
+                      subtitle: sensor.hasRealTelemetry ? 'Real feel in room' : 'Awaiting sensors',
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: _MetricCard(
                       icon: Icons.shield_rounded,
-                      iconBg: sensor.waterLevel == WaterLevel.critical
-                          ? AppTheme.dangerLight
-                          : (sensor.waterLevel == WaterLevel.warning
-                              ? AppTheme.warningLight
-                              : AppTheme.successLight),
-                      iconColor: sensor.waterLevel == WaterLevel.critical
-                          ? AppTheme.danger
-                          : (sensor.waterLevel == WaterLevel.warning
-                              ? AppTheme.warning
-                              : AppTheme.success),
+                      iconBg: !sensor.isConnected
+                          ? const Color(0xFFF1F5F9)
+                          : (sensor.waterLevel == WaterLevel.critical
+                              ? AppTheme.dangerLight
+                              : (sensor.waterLevel == WaterLevel.warning
+                                  ? AppTheme.warningLight
+                                  : AppTheme.successLight)),
+                      iconColor: !sensor.isConnected
+                          ? AppTheme.textMuted
+                          : (sensor.waterLevel == WaterLevel.critical
+                              ? AppTheme.danger
+                              : (sensor.waterLevel == WaterLevel.warning
+                                  ? AppTheme.warning
+                                  : AppTheme.success)),
                       title: 'Leak Status',
-                      value: sensor.waterLevel == WaterLevel.critical
-                          ? 'CRITICAL'
-                          : (sensor.waterLevel == WaterLevel.warning
-                              ? 'WARNING'
-                              : 'NORMAL'),
-                      subtitle: sensor.waterLevel == WaterLevel.critical
-                          ? 'Auto AC Cutoff'
-                          : 'Sensors Safe',
+                      value: !sensor.isConnected
+                          ? 'STANDBY'
+                          : (sensor.waterLevel == WaterLevel.critical
+                              ? 'CRITICAL'
+                              : (sensor.waterLevel == WaterLevel.warning
+                                  ? 'WARNING'
+                                  : 'NORMAL')),
+                      subtitle: !sensor.isConnected
+                          ? 'Connect Bluetooth'
+                          : (sensor.waterLevel == WaterLevel.critical
+                              ? 'Auto Cutoff Active'
+                              : 'Sensors Safe'),
                     ),
                   ),
                 ],
-              ).animate().fadeIn(delay: 250.ms),
+              ).animate().fadeIn(delay: 200.ms),
 
               const SizedBox(height: 20),
 
@@ -465,6 +483,7 @@ class _MasterAcControlCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final canControl = sensor.canControlAC;
     final isOn = sensor.acOn;
+    final isCritical = sensor.waterLevel == WaterLevel.critical;
 
     return Container(
       width: double.infinity,
@@ -506,9 +525,13 @@ class _MasterAcControlCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    isOn ? 'Compressor Active • Relay Closed' : 'Standby Mode • Relay Open',
+                    !sensor.isConnected
+                        ? 'Hardware Offline • Relay Disengaged'
+                        : (isOn ? 'Compressor Active • Relay Closed' : 'Standby Mode • Relay Open'),
                     style: GoogleFonts.plusJakartaSans(
-                      color: isOn ? AppTheme.success : AppTheme.textSecondary,
+                      color: !sensor.isConnected
+                          ? AppTheme.textMuted
+                          : (isOn ? AppTheme.success : AppTheme.textSecondary),
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -519,16 +542,22 @@ class _MasterAcControlCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                 decoration: BoxDecoration(
-                  color: isOn ? AppTheme.successLight : const Color(0xFFF1F5F9),
+                  color: !sensor.isConnected
+                      ? const Color(0xFFF1F5F9)
+                      : (isOn ? AppTheme.successLight : const Color(0xFFF1F5F9)),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isOn ? AppTheme.success.withValues(alpha: 0.3) : AppTheme.border,
+                    color: !sensor.isConnected
+                        ? AppTheme.border
+                        : (isOn ? AppTheme.success.withValues(alpha: 0.3) : AppTheme.border),
                   ),
                 ),
                 child: Text(
-                  isOn ? 'RUNNING' : 'STOPPED',
+                  !sensor.isConnected ? 'OFFLINE' : (isOn ? 'RUNNING' : 'STOPPED'),
                   style: GoogleFonts.plusJakartaSans(
-                    color: isOn ? const Color(0xFF065F46) : AppTheme.textSecondary,
+                    color: !sensor.isConnected
+                        ? AppTheme.textMuted
+                        : (isOn ? const Color(0xFF065F46) : AppTheme.textSecondary),
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
                   ),
@@ -537,7 +566,39 @@ class _MasterAcControlCard extends StatelessWidget {
             ],
           ),
 
-          if (!canControl) ...[
+          if (!sensor.isConnected) ...[
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const BluetoothScreen()),
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.bluetooth_disabled_rounded, color: AppTheme.textSecondary, size: 18),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Bluetooth Offline: Connect to ESP32 to control AC compressor relay.',
+                        style: GoogleFonts.plusJakartaSans(
+                          color: AppTheme.textSecondary,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: AppTheme.textMuted),
+                  ],
+                ),
+              ),
+            ),
+          ] else if (isCritical) ...[
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -763,60 +824,6 @@ class _FeatureCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ─── Simulation Banner ───────────────────────────────────────────────────────
-
-class _SimModeBanner extends StatelessWidget {
-  final SensorData sensor;
-  const _SimModeBanner({required this.sensor});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.science_outlined, color: AppTheme.primary, size: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Simulation Demo Mode',
-                  style: GoogleFonts.plusJakartaSans(
-                    color: AppTheme.textPrimary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  sensor.simulationMode ? 'Simulated sensors active' : 'Test app without hardware',
-                  style: GoogleFonts.plusJakartaSans(
-                    color: AppTheme.textSecondary,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Switch(
-            value: sensor.simulationMode,
-            onChanged: (_) => sensor.toggleSimulationMode(),
-            activeThumbColor: AppTheme.primary,
-            activeTrackColor: AppTheme.primaryLight,
-          ),
-        ],
       ),
     );
   }

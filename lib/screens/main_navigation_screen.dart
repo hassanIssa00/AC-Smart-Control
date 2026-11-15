@@ -53,9 +53,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         child: Container(
           decoration: BoxDecoration(
             color: Colors.white,
-            border: Border(
+            border: const Border(
               bottom: BorderSide(
-                color: const Color(0xFFE2E8F0),
+                color: Color(0xFFE2E8F0),
                 width: 1,
               ),
             ),
@@ -192,9 +192,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          border: Border(
+          border: const Border(
             top: BorderSide(
-              color: const Color(0xFFE2E8F0),
+              color: Color(0xFFE2E8F0),
               width: 1,
             ),
           ),
@@ -245,7 +245,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                   icon: Icons.history_edu_outlined,
                   activeIcon: Icons.history_edu_rounded,
                   label: 'Archive',
-                  badgeText: sensor.logs.length > 9 ? '9+' : '${sensor.logs.length}',
+                  badgeText: sensor.logs.isEmpty
+                      ? null
+                      : (sensor.logs.length > 9 ? '9+' : '${sensor.logs.length}'),
                   badgeColor: AppTheme.primary,
                 ),
               ],
