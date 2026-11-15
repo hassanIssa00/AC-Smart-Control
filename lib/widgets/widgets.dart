@@ -153,7 +153,7 @@ class _ModernGaugePainter extends CustomPainter {
       old.progress != progress || old.color != color;
 }
 
-/// Clean Minimalist Water Reservoir Widget
+/// Luxury Architectural 3D Acrylic Water Reservoir Widget
 class WaterTankWidget extends StatelessWidget {
   final double fillPercent; // 0.0 to 1.0
   final Color color;
@@ -168,80 +168,163 @@ class WaterTankWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pct = (fillPercent.clamp(0.0, 1.0) * 100).round();
+
     return Column(
       children: [
         Container(
-          width: 82,
-          height: 160,
+          width: 90,
+          height: 170,
           decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
-            borderRadius: BorderRadius.circular(16),
+            color: const Color(0xFFF1F5F9),
+            border: Border.all(color: const Color(0xFFCBD5E1), width: 2),
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
+                color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: color.withValues(alpha: 0.15),
+                blurRadius: 24,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
-                // Water fill with calm modern gradient
+                // Water fill with calm luminous gradient
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 700),
                   curve: Curves.easeOutCubic,
-                  height: 160 * fillPercent,
+                  height: 170 * fillPercent.clamp(0.02, 1.0),
                   width: double.infinity,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topCenter,
                       end: Alignment.bottomCenter,
                       colors: [
-                        color.withValues(alpha: 0.75),
+                        color.withValues(alpha: 0.85),
                         color,
                       ],
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
                   ),
                 ),
-                // Level tick markers
-                ...List.generate(3, (i) {
-                  final y = 40.0 * (i + 1);
-                  return Positioned(
-                    bottom: y,
-                    left: 6,
-                    right: 6,
-                    child: Container(
-                      height: 1,
-                      color: Colors.white.withValues(alpha: 0.35),
-                    ),
-                  );
-                }),
-                // Percentage badge
+
+                // Luminous Water Meniscus Surface Line
                 Positioned(
-                  top: 12,
+                  bottom: (170 * fillPercent.clamp(0.02, 1.0)) - 1.5,
+                  left: 0,
+                  right: 0,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    height: 2.5,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      borderRadius: BorderRadius.circular(10),
+                      color: Colors.white.withValues(alpha: 0.8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
+                          color: Colors.white.withValues(alpha: 0.9),
                           blurRadius: 4,
                         ),
                       ],
                     ),
-                    child: Text(
-                      '${(fillPercent * 100).round()}%',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
+                  ),
+                ),
+
+                // Left Glass Specular Glare (Reflective Acrylic Bevel)
+                Positioned(
+                  top: 10,
+                  left: 6,
+                  bottom: 10,
+                  child: Container(
+                    width: 3.5,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.65),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+
+                // Precision Laser-Etched Level Markers (25%, 50%, 75%)
+                ...List.generate(3, (i) {
+                  final y = 42.5 * (i + 1);
+                  final markText = ['25%', '50%', '75%'][i];
+                  return Positioned(
+                    bottom: y,
+                    left: 14,
+                    right: 8,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          width: 22,
+                          height: 1.2,
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                        Text(
+                          markText,
+                          style: GoogleFonts.plusJakartaSans(
+                            fontSize: 7.5,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white.withValues(alpha: 0.85),
+                            shadows: [
+                              Shadow(color: Colors.black.withValues(alpha: 0.4), blurRadius: 2),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                // Floating Dynamic Percentage Badge at Top
+                Positioned(
+                  top: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.95),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.08),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: color,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '$pct%',
+                          style: GoogleFonts.plusJakartaSans(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -249,13 +332,13 @@ class WaterTankWidget extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Text(
           label,
           style: GoogleFonts.plusJakartaSans(
             color: AppTheme.textSecondary,
             fontSize: 12,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ],

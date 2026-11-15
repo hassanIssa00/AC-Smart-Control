@@ -211,46 +211,106 @@ class AcControlScreen extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: canControl && !sensor.acOn
-                                ? () {
-                                    sensor.turnACOn();
-                                    bt.sendCommand('AC:ON');
-                                  }
-                                : null,
-                            icon: const Icon(Icons.power_settings_new_rounded, size: 20),
-                            label: const Text('TURN ON AC'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.success,
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: const Color(0xFFF1F5F9),
-                              disabledForegroundColor: const Color(0xFF94A3B8),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            height: 52,
+                            decoration: BoxDecoration(
+                              gradient: canControl && !sensor.acOn
+                                  ? const LinearGradient(
+                                      colors: [Color(0xFF059669), Color(0xFF10B981)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : null,
+                              color: canControl && !sensor.acOn ? null : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: canControl && !sensor.acOn
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                                        blurRadius: 14,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: canControl && !sensor.acOn
+                                  ? () {
+                                      sensor.turnACOn();
+                                      bt.sendCommand('AC:ON');
+                                    }
+                                  : null,
+                              icon: const Icon(Icons.power_settings_new_rounded, size: 20),
+                              label: Text(
+                                'TURN ON AC',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.transparent,
+                                disabledForegroundColor: const Color(0xFF94A3B8),
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
                               ),
                             ),
                           ),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: sensor.acOn
-                                ? () {
-                                    sensor.turnACOff();
-                                    bt.sendCommand('AC:OFF');
-                                  }
-                                : null,
-                            icon: const Icon(Icons.power_off_rounded, size: 20),
-                            label: const Text('TURN OFF AC'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.danger,
-                              foregroundColor: Colors.white,
-                              disabledBackgroundColor: const Color(0xFFF1F5F9),
-                              disabledForegroundColor: const Color(0xFF94A3B8),
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
+                          child: Container(
+                            height: 52,
+                            decoration: BoxDecoration(
+                              gradient: sensor.acOn
+                                  ? const LinearGradient(
+                                      colors: [Color(0xFFDC2626), Color(0xFFEF4444)],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                  : null,
+                              color: sensor.acOn ? null : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: sensor.acOn
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                                        blurRadius: 14,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: ElevatedButton.icon(
+                              onPressed: sensor.acOn
+                                  ? () {
+                                      sensor.turnACOff();
+                                      bt.sendCommand('AC:OFF');
+                                    }
+                                  : null,
+                              icon: const Icon(Icons.power_off_rounded, size: 20),
+                              label: Text(
+                                'TURN OFF AC',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 13,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                foregroundColor: Colors.white,
+                                disabledBackgroundColor: Colors.transparent,
+                                disabledForegroundColor: const Color(0xFF94A3B8),
+                                shadowColor: Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
                               ),
                             ),
                           ),

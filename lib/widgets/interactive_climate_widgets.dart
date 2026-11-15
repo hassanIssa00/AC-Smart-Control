@@ -30,6 +30,7 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
     with TickerProviderStateMixin {
   late AnimationController _louverController;
   late AnimationController _breezeController;
+  late AnimationController _shimmerController;
   late Animation<double> _louverAngle;
   bool _isAutoSwing = true;
 
@@ -51,6 +52,12 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
       vsync: this,
       duration: const Duration(milliseconds: 2200),
     );
+
+    // Continuous piano glass shimmer reflection sweep (every 3.2s)
+    _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat();
 
     if (widget.isOn) {
       _louverController.forward();
@@ -76,6 +83,7 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
   void dispose() {
     _louverController.dispose();
     _breezeController.dispose();
+    _shimmerController.dispose();
     super.dispose();
   }
 
@@ -103,254 +111,290 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
           Stack(
             clipBehavior: Clip.none,
             children: [
-              // 1. Chassis Outer Shell (Luxury Obsidian Piano Black Edition)
+              // 1. Chassis Outer Shell (Luxury Obsidian Piano Glass Edition)
               Container(
                 width: double.infinity,
-                height: 120,
+                height: 122,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF242E40), // Top bevel titanium reflection
-                      Color(0xFF131824), // Sleek obsidian body
-                      Color(0xFF090D16), // Deep midnight black base
+                      Color(0xFF283447), // Top chamfer titanium specular rim
+                      Color(0xFF141A26), // Obsidian dark crystal body
+                      Color(0xFF090D14), // Midnight piano black
+                      Color(0xFF04060A), // Deep base shadow
                     ],
+                    stops: [0.0, 0.15, 0.7, 1.0],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
                   borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(22),
-                    topRight: Radius.circular(22),
-                    bottomLeft: Radius.circular(14),
-                    bottomRight: Radius.circular(14),
+                    topLeft: Radius.circular(24),
+                    topRight: Radius.circular(24),
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
                   ),
-                  border: Border.all(color: const Color(0xFF334155), width: 1.2),
+                  border: Border.all(color: const Color(0xFF3B4A63), width: 1.4),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.30),
-                      blurRadius: 22,
-                      offset: const Offset(0, 10),
+                      color: Colors.black.withValues(alpha: 0.38),
+                      blurRadius: 26,
+                      offset: const Offset(0, 12),
                     ),
                     BoxShadow(
                       color: widget.isOn
-                          ? const Color(0xFF00E5FF).withValues(alpha: 0.22)
-                          : Colors.transparent,
-                      blurRadius: 36,
-                      offset: const Offset(0, 14),
+                          ? const Color(0xFF00E5FF).withValues(alpha: 0.28)
+                          : const Color(0xFF64748B).withValues(alpha: 0.08),
+                      blurRadius: 40,
+                      offset: const Offset(0, 16),
                     ),
                   ],
                 ),
-                child: Stack(
-                  children: [
-                    // Top Air Intake Grille Lines
-                    Positioned(
-                      top: 10,
-                      left: 30,
-                      right: 30,
-                      child: Column(
-                        children: List.generate(
-                          3,
-                          (i) => Container(
-                            margin: const EdgeInsets.only(bottom: 2.5),
-                            height: 1.2,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF1E293B),
-                              borderRadius: BorderRadius.circular(1),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Chrome Horizontal Trim Accent (Mirror Platinum Reflection)
-                    Positioned(
-                      top: 24,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        height: 1.5,
-                        decoration: const BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.transparent,
-                              Color(0xFF475569),
-                              Color(0xFF94A3B8),
-                              Color(0xFFF8FAFC),
-                              Color(0xFF94A3B8),
-                              Color(0xFF475569),
-                              Colors.transparent,
-                            ],
-                            stops: [0.0, 0.15, 0.45, 0.5, 0.55, 0.85, 1.0],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Brand Badge (Left Side)
-                    Positioned(
-                      left: 20,
-                      bottom: 24,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 14,
-                            height: 14,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: widget.isOn
-                                  ? const Color(0xFF00E5FF)
-                                  : const Color(0xFF334155),
-                              boxShadow: widget.isOn
-                                  ? [
-                                      BoxShadow(
-                                        color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
-                                        blurRadius: 8,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                            child: Icon(
-                              Icons.ac_unit_rounded,
-                              size: 10,
-                              color: widget.isOn ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'CLIMASMART',
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: const Color(0xFFF1F5F9),
-                                  fontSize: 8.5,
-                                  fontWeight: FontWeight.w800,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              Text(
-                                'BLACK EDITION DUAL-COOL',
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: const Color(0xFF94A3B8),
-                                  fontSize: 6.5,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Embedded Concealed Digital LED Display (Right Side)
-                    Positioned(
-                      right: 24,
-                      bottom: 20,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // Status Pilot LED Light
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: widget.isOn
-                                  ? const Color(0xFF10B981)
-                                  : const Color(0xFF334155),
-                              boxShadow: widget.isOn
-                                  ? [
-                                      BoxShadow(
-                                        color: const Color(0xFF10B981)
-                                            .withValues(alpha: 0.9),
-                                        blurRadius: 8,
-                                        spreadRadius: 2,
-                                      ),
-                                    ]
-                                  : null,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-
-                          // Concealed LED Glow Screen (Smoked Glass Digital Display)
-                          AnimatedOpacity(
-                            duration: const Duration(milliseconds: 400),
-                            opacity: widget.isOn ? 1.0 : 0.2,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 3),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(23),
+                    topRight: Radius.circular(23),
+                    bottomLeft: Radius.circular(15),
+                    bottomRight: Radius.circular(15),
+                  ),
+                  child: Stack(
+                    children: [
+                      // Top Air Intake Grille Lines
+                      Positioned(
+                        top: 10,
+                        left: 30,
+                        right: 30,
+                        child: Column(
+                          children: List.generate(
+                            3,
+                            (i) => Container(
+                              margin: const EdgeInsets.only(bottom: 2.5),
+                              height: 1.2,
                               decoration: BoxDecoration(
-                                color: widget.isOn
-                                    ? const Color(0xFF00E5FF).withValues(alpha: 0.1)
-                                    : const Color(0xFF1E293B).withValues(alpha: 0.3),
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: widget.isOn
-                                      ? const Color(0xFF00E5FF).withValues(alpha: 0.35)
-                                      : Colors.transparent,
-                                  width: 0.8,
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    displayTemp,
-                                    style: GoogleFonts.orbitron(
-                                      color: widget.isOn
-                                          ? const Color(0xFF00E5FF)
-                                          : const Color(0xFF475569),
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w800,
-                                      letterSpacing: -1,
-                                      shadows: widget.isOn
-                                          ? [
-                                              Shadow(
-                                                color: const Color(0xFF00E5FF).withValues(alpha: 0.7),
-                                                blurRadius: 10,
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Icon(
-                                    Icons.air_rounded,
-                                    size: 14,
-                                    color: widget.isOn
-                                        ? const Color(0xFF00E5FF)
-                                        : const Color(0xFF475569),
-                                  ),
-                                ],
+                                color: const Color(0xFF1E293B),
+                                borderRadius: BorderRadius.circular(1),
                               ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
 
-                    // Bottom Vent Recess Shadow
-                    Positioned(
-                      left: 12,
-                      right: 12,
-                      bottom: 0,
-                      child: Container(
-                        height: 12,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF020617),
-                          borderRadius: BorderRadius.only(
-                            bottomLeft: Radius.circular(10),
-                            bottomRight: Radius.circular(10),
+                      // Mirror Platinum Chrome Horizontal Accent Line
+                      Positioned(
+                        top: 25,
+                        left: 0,
+                        right: 0,
+                        child: Container(
+                          height: 1.8,
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Color(0xFF334155),
+                                Color(0xFF94A3B8),
+                                Color(0xFFFFFFFF),
+                                Color(0xFFCBD5E1),
+                                Color(0xFF94A3B8),
+                                Color(0xFF334155),
+                                Colors.transparent,
+                              ],
+                              stops: [0.0, 0.1, 0.35, 0.5, 0.65, 0.9, 1.0],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+
+                      // Fixed Tempered Curved Glass Specular Glare (Piano Mirror Reflection)
+                      Positioned.fill(
+                        child: CustomPaint(
+                          painter: _GlassCurvedReflectPainter(),
+                        ),
+                      ),
+
+                      // Dynamic Shimmer Light Sweep (Active Gleam & Glint)
+                      Positioned.fill(
+                        child: AnimatedBuilder(
+                          animation: _shimmerController,
+                          builder: (context, child) {
+                            return CustomPaint(
+                              painter: _GlossyLightShinePainter(
+                                progress: _shimmerController.value,
+                                isOn: widget.isOn,
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      // Brand Badge (Left Side)
+                      Positioned(
+                        left: 20,
+                        bottom: 24,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 15,
+                              height: 15,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: widget.isOn
+                                    ? const Color(0xFF00E5FF)
+                                    : const Color(0xFF334155),
+                                boxShadow: widget.isOn
+                                    ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF00E5FF).withValues(alpha: 0.7),
+                                          blurRadius: 10,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Icon(
+                                Icons.ac_unit_rounded,
+                                size: 10.5,
+                                color: widget.isOn ? const Color(0xFF090D16) : const Color(0xFF94A3B8),
+                              ),
+                            ),
+                            const SizedBox(width: 7),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'CLIMASMART',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: const Color(0xFFF8FAFC),
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.2,
+                                  ),
+                                ),
+                                Text(
+                                  'BLACK EDITION DUAL-COOL',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: const Color(0xFF94A3B8),
+                                    fontSize: 6.5,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Embedded Concealed Digital LED Display (Right Side)
+                      Positioned(
+                        right: 22,
+                        bottom: 19,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Status Pilot LED Light
+                            Container(
+                              width: 7,
+                              height: 7,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: widget.isOn
+                                    ? const Color(0xFF10B981)
+                                    : const Color(0xFF334155),
+                                boxShadow: widget.isOn
+                                    ? [
+                                        BoxShadow(
+                                          color: const Color(0xFF10B981).withValues(alpha: 0.95),
+                                          blurRadius: 10,
+                                          spreadRadius: 2,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+
+                            // Concealed LED Glow Screen (Smoked Glass Digital Display)
+                            AnimatedOpacity(
+                              duration: const Duration(milliseconds: 400),
+                              opacity: widget.isOn ? 1.0 : 0.25,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: widget.isOn
+                                      ? const Color(0xFF00E5FF).withValues(alpha: 0.12)
+                                      : const Color(0xFF1E293B).withValues(alpha: 0.35),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: widget.isOn
+                                        ? const Color(0xFF00E5FF).withValues(alpha: 0.4)
+                                        : Colors.transparent,
+                                    width: 0.8,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      displayTemp,
+                                      style: GoogleFonts.orbitron(
+                                        color: widget.isOn
+                                            ? const Color(0xFF00F0FF)
+                                            : const Color(0xFF475569),
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        letterSpacing: -1,
+                                        shadows: widget.isOn
+                                            ? [
+                                                Shadow(
+                                                  color: const Color(0xFF00F0FF).withValues(alpha: 0.85),
+                                                  blurRadius: 12,
+                                                ),
+                                                Shadow(
+                                                  color: const Color(0xFF38BDF8).withValues(alpha: 0.5),
+                                                  blurRadius: 24,
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.air_rounded,
+                                      size: 14,
+                                      color: widget.isOn
+                                          ? const Color(0xFF00F0FF)
+                                          : const Color(0xFF475569),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Bottom Vent Recess Shadow
+                      Positioned(
+                        left: 12,
+                        right: 12,
+                        bottom: 0,
+                        child: Container(
+                          height: 12,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF020617),
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
 
-              // 2. Animated Motorized Bottom Louver Flap (Black Edition)
+              // 2. Animated Motorized Bottom Louver Flap (Glossy Black Edition)
               Positioned(
                 left: 14,
                 right: 14,
@@ -368,7 +412,12 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                         height: 14,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFF334155), Color(0xFF1E293B), Color(0xFF090D16)],
+                            colors: [
+                              Color(0xFF475569), // Specular light highlight on top curve
+                              Color(0xFF1E293B), // Obsidian body
+                              Color(0xFF090D16), // Dark piano black
+                            ],
+                            stops: [0.0, 0.35, 1.0],
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                           ),
@@ -376,7 +425,7 @@ class _RealisticSplitAcUnitState extends State<RealisticSplitAcUnit>
                           border: Border.all(color: const Color(0xFF475569), width: 0.8),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: openProgress * 0.4),
+                              color: Colors.black.withValues(alpha: openProgress * 0.45),
                               blurRadius: 8,
                               offset: Offset(0, openProgress * 4),
                             ),
@@ -487,6 +536,104 @@ class _CoolBreezePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _CoolBreezePainter oldDelegate) {
     return oldDelegate.progress != progress || oldDelegate.opacity != opacity;
+  }
+}
+
+// ─── Fixed Tempered Glass Specular Glare Painter (Mirror Glass Look) ──────────
+
+class _GlassCurvedReflectPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(size.width, 0);
+    path.lineTo(size.width, size.height * 0.40);
+    path.quadraticBezierTo(
+      size.width * 0.45,
+      size.height * 0.58,
+      0,
+      size.height * 0.28,
+    );
+    path.close();
+
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.20),
+          Colors.white.withValues(alpha: 0.06),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+        stops: const [0.0, 0.42, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawPath(path, paint);
+
+    // Subtle edge highlight along the top bevel
+    final rimPaint = Paint()
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke
+      ..shader = LinearGradient(
+        colors: [
+          Colors.white.withValues(alpha: 0.45),
+          Colors.white.withValues(alpha: 0.12),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, 4));
+    canvas.drawLine(const Offset(22, 1.2), Offset(size.width - 22, 1.2), rimPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ─── Dynamic Piano Glass Shimmer Beam Painter (Active Shiny Glint) ───────────
+
+class _GlossyLightShinePainter extends CustomPainter {
+  final double progress; // 0.0 to 1.0
+  final bool isOn;
+
+  _GlossyLightShinePainter({required this.progress, required this.isOn});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final totalSpan = size.width * 1.6;
+    final currentCenterX = (progress * totalSpan) - (size.width * 0.3);
+    const beamWidth = 70.0;
+
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    canvas.save();
+    canvas.clipRect(rect);
+
+    final shinePaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          Colors.transparent,
+          (isOn ? const Color(0xFF00E5FF) : Colors.white).withValues(alpha: 0.08),
+          Colors.white.withValues(alpha: 0.35),
+          (isOn ? const Color(0xFF00E5FF) : Colors.white).withValues(alpha: 0.18),
+          Colors.transparent,
+        ],
+        stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
+      ).createShader(Rect.fromLTWH(currentCenterX - beamWidth, 0, beamWidth * 2, size.height));
+
+    final beamPath = Path();
+    beamPath.moveTo(currentCenterX - beamWidth - 30, 0);
+    beamPath.lineTo(currentCenterX + beamWidth - 30, 0);
+    beamPath.lineTo(currentCenterX + beamWidth + 30, size.height);
+    beamPath.lineTo(currentCenterX - beamWidth + 30, size.height);
+    beamPath.close();
+
+    canvas.drawPath(beamPath, shinePaint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _GlossyLightShinePainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.isOn != isOn;
   }
 }
 
@@ -731,29 +878,70 @@ class _DropletWavePainter extends CustomPainter {
     final fillHeight = size.height * fillPercent.clamp(0.04, 0.96);
     final waterSurfaceY = size.height - fillHeight;
 
-    final liquidPaint = Paint()
+    // 1. Background Slower Wave Layer (Darker Depth)
+    final backPaint = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFF0284C7), Color(0xFF0369A1)],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      ).createShader(Rect.fromLTWH(0, waterSurfaceY, size.width, fillHeight));
+
+    final backPath = Path();
+    backPath.moveTo(0, size.height);
+    backPath.lineTo(0, waterSurfaceY);
+
+    final backAmplitude = 2.8 + rippleBonus * 1.6;
+    for (double x = 0; x <= size.width; x += 1) {
+      final y = waterSurfaceY +
+          backAmplitude *
+              math.sin((x / size.width * 2 * math.pi) - (progress * 2 * math.pi) + math.pi * 0.5);
+      backPath.lineTo(x, y);
+    }
+    backPath.lineTo(size.width, size.height);
+    backPath.close();
+    canvas.drawPath(backPath, backPaint);
+
+    // 2. Foreground Radiant Sinusoidal Wave (Cyan & Sky Blue)
+    final frontPaint = Paint()
       ..shader = const LinearGradient(
         colors: [Color(0xFF38BDF8), Color(0xFF0284C7), Color(0xFF0369A1)],
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ).createShader(Rect.fromLTWH(0, waterSurfaceY, size.width, fillHeight));
 
-    final path = Path();
-    path.moveTo(0, size.height);
-    path.lineTo(0, waterSurfaceY);
+    final frontPath = Path();
+    frontPath.moveTo(0, size.height);
+    frontPath.lineTo(0, waterSurfaceY);
 
-    final waveAmplitude = 3.5 + rippleBonus * 2.0;
+    final waveAmplitude = 3.8 + rippleBonus * 2.2;
     for (double x = 0; x <= size.width; x += 1) {
       final y = waterSurfaceY +
           waveAmplitude *
               math.sin((x / size.width * 2 * math.pi) + (progress * 2 * math.pi));
-      path.lineTo(x, y);
+      frontPath.lineTo(x, y);
     }
+    frontPath.lineTo(size.width, size.height);
+    frontPath.close();
+    canvas.drawPath(frontPath, frontPaint);
 
-    path.lineTo(size.width, size.height);
-    path.close();
+    // 3. Water Crest Surface Foam & Glint
+    final foamPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.7)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
 
-    canvas.drawPath(path, liquidPaint);
+    final foamPath = Path();
+    for (double x = 0; x <= size.width; x += 2) {
+      final y = waterSurfaceY +
+          waveAmplitude *
+              math.sin((x / size.width * 2 * math.pi) + (progress * 2 * math.pi));
+      if (x == 0) {
+        foamPath.moveTo(x, y);
+      } else {
+        foamPath.lineTo(x, y);
+      }
+    }
+    canvas.drawPath(foamPath, foamPaint);
   }
 
   @override
@@ -894,6 +1082,22 @@ class _InteractiveTemperatureCardState extends State<InteractiveTemperatureCard>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
+                  // Lab Graduated Scale Ticks
+                  SizedBox(
+                    height: 94,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text('40°', style: GoogleFonts.plusJakartaSans(fontSize: 8, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w700)),
+                        Text('30°', style: GoogleFonts.plusJakartaSans(fontSize: 8, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w700)),
+                        Text('20°', style: GoogleFonts.plusJakartaSans(fontSize: 8, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w700)),
+                        Text('10°', style: GoogleFonts.plusJakartaSans(fontSize: 8, color: const Color(0xFF94A3B8), fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+
                   // Physical Glass Thermometer Column
                   Container(
                     width: 22,
@@ -906,7 +1110,7 @@ class _InteractiveTemperatureCardState extends State<InteractiveTemperatureCard>
                     child: Stack(
                       alignment: Alignment.bottomCenter,
                       children: [
-                        // Mercury Level Column
+                        // Mercury Level Column with Meniscus Highlight
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 600),
                           curve: Curves.easeOutCubic,
@@ -921,6 +1125,28 @@ class _InteractiveTemperatureCardState extends State<InteractiveTemperatureCard>
                               end: Alignment.bottomCenter,
                             ),
                             borderRadius: BorderRadius.circular(6),
+                            boxShadow: hasData
+                                ? [
+                                    BoxShadow(
+                                      color: tempColor.withValues(alpha: 0.3),
+                                      blurRadius: 6,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        ),
+
+                        // Glass Tube Specular Reflection (Left Glint)
+                        Positioned(
+                          top: 8,
+                          left: 3.5,
+                          bottom: 24,
+                          child: Container(
+                            width: 2.0,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.75),
+                              borderRadius: BorderRadius.circular(1),
+                            ),
                           ),
                         ),
 
@@ -938,7 +1164,7 @@ class _InteractiveTemperatureCardState extends State<InteractiveTemperatureCard>
                                 boxShadow: hasData
                                     ? [
                                         BoxShadow(
-                                          color: tempColor.withValues(alpha: 0.4),
+                                          color: tempColor.withValues(alpha: 0.5),
                                           blurRadius: 10,
                                           spreadRadius: 2,
                                         ),

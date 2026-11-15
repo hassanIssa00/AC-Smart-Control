@@ -550,43 +550,103 @@ class _MasterAcControlCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: canControl && !isOn
-                      ? () {
-                          sensor.turnACOn();
-                          bt.sendCommand('AC:ON');
-                        }
-                      : null,
-                  icon: const Icon(Icons.play_arrow_rounded, size: 18),
-                  label: const Text('START AC'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.success,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFFF1F5F9),
-                    disabledForegroundColor: const Color(0xFFCBD5E1),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: canControl && !isOn
+                        ? const LinearGradient(
+                            colors: [Color(0xFF059669), Color(0xFF10B981)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: canControl && !isOn ? null : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: canControl && !isOn
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: canControl && !isOn
+                        ? () {
+                            sensor.turnACOn();
+                            bt.sendCommand('AC:ON');
+                          }
+                        : null,
+                    icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                    label: Text(
+                      'START AC',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12.5,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.transparent,
+                      disabledForegroundColor: const Color(0xFF94A3B8),
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
                   ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: isOn
-                      ? () {
-                          sensor.turnACOff();
-                          bt.sendCommand('AC:OFF');
-                        }
-                      : null,
-                  icon: const Icon(Icons.stop_rounded, size: 18),
-                  label: const Text('STOP AC'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.danger,
-                    foregroundColor: Colors.white,
-                    disabledBackgroundColor: const Color(0xFFF1F5F9),
-                    disabledForegroundColor: const Color(0xFFCBD5E1),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: isOn
+                        ? const LinearGradient(
+                            colors: [Color(0xFFDC2626), Color(0xFFEF4444)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: isOn ? null : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: isOn
+                        ? [
+                            BoxShadow(
+                              color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: isOn
+                        ? () {
+                            sensor.turnACOff();
+                            bt.sendCommand('AC:OFF');
+                          }
+                        : null,
+                    icon: const Icon(Icons.stop_rounded, size: 20),
+                    label: Text(
+                      'STOP AC',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12.5,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.transparent,
+                      disabledForegroundColor: const Color(0xFF94A3B8),
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
                   ),
                 ),
               ),
@@ -623,7 +683,7 @@ class _MetricCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppTheme.border),
         boxShadow: AppTheme.cardShadow,
       ),
@@ -631,34 +691,47 @@ class _MetricCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: iconColor, size: 18),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: iconBg,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, color: iconColor, size: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    title,
+                    style: GoogleFonts.plusJakartaSans(
+                      color: AppTheme.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: GoogleFonts.plusJakartaSans(
-                  color: AppTheme.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: iconColor,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Text(
             value,
             style: GoogleFonts.plusJakartaSans(
               color: AppTheme.textPrimary,
-              fontSize: 18,
+              fontSize: 19,
               fontWeight: FontWeight.w800,
-              letterSpacing: -0.3,
+              letterSpacing: -0.4,
             ),
           ),
           const SizedBox(height: 2),
@@ -667,6 +740,7 @@ class _MetricCard extends StatelessWidget {
             style: GoogleFonts.plusJakartaSans(
               color: AppTheme.textMuted,
               fontSize: 11,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
