@@ -31,49 +31,50 @@ The system addresses the critical problem of **unnoticed condensate drainage fai
 
 ```mermaid
 flowchart TD
-    subgraph SENSORS["1. SENSING & ACTUATION LAYER"]
-        DHT["DHT22 Sensor\n(Pin GPIO 4)\nTemp & Humidity"]
-        LEAK["Water Leak Sensor\n(Pin GPIO 34 Analog)\nCondensate Reservoir"]
-        RELAY["5V Optical Relay Module\n(Pin GPIO 2)\nHigh-Power AC Line"]
+    subgraph SENSORS["1. SENSING AND ACTUATION LAYER"]
+        DHT["DHT22 Sensor<br/>(GPIO 4)<br/>Temp and Humidity"]
+        LEAK["Water Leak Sensor<br/>(GPIO 34 Analog)<br/>Condensate Reservoir"]
+        RELAY["5V Optical Relay<br/>(GPIO 2)<br/>Compressor Line"]
     end
 
     subgraph MCU["2. EMBEDDED CONTROLLER (ESP32)"]
-        ADC["ADC Converter\nThreshold Analyzer"]
-        INTERLOCK["Hardware Fail-Safe\nSafety Interlock Routine"]
-        PACKET["Serial ASCII Packetizer\n(115200 Baud / 2s Interval)"]
-        SPP_SERVER["Bluetooth Classic Server\n(SPP Profile: ESP32_AC_SMART)"]
+        ADC["ADC Converter<br/>Threshold Analyzer"]
+        INTERLOCK["Hardware Fail-Safe<br/>Safety Interlock Routine"]
+        PACKET["ASCII Packetizer<br/>(115200 Baud / 2s)"]
+        SPP_SERVER["Bluetooth Classic Server<br/>(Profile: ESP32_AC_SMART)"]
     end
 
     subgraph TRANSPORT["3. WIRELESS SERIAL TRANSPORT"]
-        BT_RFCOMM["Bluetooth Classic RFCOMM\nUUID: 00001101-0000-1000-8000-00805F9B34FB\nBidirectional Stream"]
+        BT_RFCOMM["Bluetooth Classic RFCOMM<br/>UUID: 00001101-0000-1000-8000-00805F9B34FB"]
     end
 
     subgraph APP["4. FLUTTER APPLICATION LAYER"]
-        BT_CLIENT["BluetoothService\nAuto-Reconnect & Buffer Guard"]
-        STATE["SensorData Provider\nSingle Source of Truth"]
-        SAFETY_LOCK["App-Level Safety Interlock\nPower Lockout on Critical Leak"]
+        BT_CLIENT["BluetoothService<br/>Auto-Reconnect and Buffer Guard"]
+        STATE["SensorData Provider<br/>Single Source of Truth"]
+        SAFETY_LOCK["Safety Interlock Lockout<br/>Auto-Cutoff Guard"]
     end
 
-    subgraph UI["5. HUMAN-CENTRIC LIGHT UI"]
-        DASH["Dashboard\n• Live Dual Gauges\n• Master ON/OFF Switch\n• Real-Time Leak Pill"]
-        CLIMATE["Climate Detail\n• Louver Airflow View\n• Relay Diagnostic State"]
-        TANK["Leakage Reservoir\n• 3-Tier Tank Visualizer\n• Simulation Hardware Test"]
-        ARCHIVE["Archive & PDF\n• Audit Event Timeline\n• A4 Signed PDF Report"]
+    subgraph UI["5. LIGHT THEME UI"]
+        DASH["Dashboard Screen<br/>Live Gauges and Master Switch"]
+        CLIMATE["Climate Control<br/>Louver and Relay State"]
+        TANK["Water Reservoir<br/>3-Tier Acrylic Tank Visualizer"]
+        ARCHIVE["Archive and PDF<br/>Timeline and Signed PDF Report"]
     end
 
-    %% Connections
     DHT --> ADC
     LEAK --> ADC
     ADC --> INTERLOCK
-    INTERLOCK -->|Override Kill Signal| RELAY
+    INTERLOCK -->|Safety Cutoff| RELAY
     INTERLOCK --> PACKET
     PACKET --> SPP_SERVER
-    SPP_SERVER <--> BT_RFCOMM
-    BT_RFCOMM <--> BT_CLIENT
+    SPP_SERVER -->|Wireless Stream| BT_RFCOMM
+    BT_RFCOMM -->|Serial Ingest| BT_CLIENT
     BT_CLIENT --> STATE
     STATE --> SAFETY_LOCK
     SAFETY_LOCK --> UI
-    DASH -->|AC:ON / AC:OFF| BT_CLIENT
+    DASH -->|AC ON / OFF Command| BT_CLIENT
+    BT_CLIENT -->|Send Command| BT_RFCOMM
+    BT_RFCOMM -->|Execute Relay| SPP_SERVER
 ```
 
 ---
@@ -84,35 +85,24 @@ The following state machine governs both the **ESP32 embedded firmware** and the
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Standby: Power On
-    Standby --> Normal: BT Connected & Sensor Valid
+    [*] --> Standby: System Boot
+    Standby --> Normal_Safe: BT Connected and Sensors Online
     
-    state Normal {
+    Normal_Safe --> Warning_Level: Water Reservoir Level Over 40%
+    Warning_Level --> Normal_Safe: Reservoir Drained (Below 40%)
+    
+    Normal_Safe --> Critical_Leakage: Water Level Over 75%
+    Warning_Level --> Critical_Leakage: Overflow Detected
+    
+    Critical_Leakage --> Emergency_Cutoff: Safety Interlock Triggered
+    Emergency_Cutoff --> Compressor_Locked: GPIO 2 Forced LOW (Relay Off)
+    Compressor_Locked --> Normal_Safe: Tank Emptied and Sensor Dry
+    
+    state Normal_Safe {
         [*] --> AC_Idle
-        AC_Idle --> AC_Running: User taps 'START AC' (AC:ON)
-        AC_Running --> AC_Idle: User taps 'STOP AC' (AC:OFF)
+        AC_Idle --> AC_Running: User taps START AC
+        AC_Running --> AC_Idle: User taps STOP AC
     }
-
-    Normal --> Warning: Water Reservoir > 40% (ADC > 1500)
-    
-    state Warning {
-        note right of Warning: Alert notification banner triggered.\nUser advised to inspect drainage.
-        W_Running --> W_Idle: Manual Stop
-        W_Idle --> W_Running: Manual Start Permitted
-    }
-
-    Warning --> Normal: Reservoir Drained (ADC < 1500)
-
-    Warning --> Critical_Leakage: Water Overflow > 75% (ADC > 2800)
-    Normal --> Critical_Leakage: Sudden Water Burst (ADC > 2800)
-
-    state Critical_Leakage {
-        [*] --> Auto_Shutdown
-        Auto_Shutdown --> Compressor_Killed: Relay forced LOW immediately
-        Compressor_Killed --> Lockout_Engaged: Red Alert Banner & UI Lockout
-    }
-
-    Critical_Leakage --> Normal: Sensor Cleared & Safe Level Restored
 ```
 
 ---
@@ -122,39 +112,39 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
     autonumber
-    participant ESP as ESP32 Microcontroller
+    actor User as System Operator
     participant App as Flutter Mobile App
-    participant User as System Operator
+    participant ESP as ESP32 Microcontroller
+    participant Relay as AC Compressor Relay
 
-    Note over ESP,App: Bluetooth Classic RFCOMM Handshake Established
+    Note over App,ESP: Bluetooth Classic RFCOMM Handshake Established
     
-    loop Every 2000ms (Active Telemetry Stream)
-        ESP->>App: Packet: "T:24.5,H:58.0,W:0\n"
-        Note over App: Parse Temperature: 24.5°C<br/>Parse Humidity: 58.0%<br/>Parse Water Level: Normal (0)
-        App->>App: Smooth animated gauge update
+    loop Telemetry Stream Every 2 Seconds
+        ESP->>App: Telemetry Packet (T:24.5, H:58.0, W:0)
+        App->>App: Update Temperature and Humidity Gauges
     end
 
-    opt User Controls AC Power
-        User->>App: Taps "START AC" button
-        App->>ESP: Sends Command: "AC:ON\n"
-        ESP->>ESP: Validate water safety (W < 2)
-        ESP->>ESP: Set GPIO 2 HIGH (Relay energized)
-        ESP-->>App: Next packet reflects running state
+    opt Manual AC Power Control
+        User->>App: Tap START AC Switch
+        App->>ESP: Command: AC_ON
+        ESP->>Relay: Energize Relay (GPIO 2 HIGH)
+        Relay-->>ESP: Compressor Running
+        ESP->>App: Telemetry Packet (Running State)
     end
 
-    critical Condensate Reservoir Overflow Detected
-        ESP->>ESP: Analog ADC read exceeds 2800
-        ESP->>ESP: Hardware Interrupt: Force GPIO 2 LOW (Relay Kill)
-        ESP->>App: Packet: "T:25.1,H:62.4,W:2\n"
-        App->>App: Sound haptic alert & pop Emergency Leakage Banner
-        App->>App: Lock out "START AC" button (Padlock active)
-        App->>User: Displays: "EMERGENCY: Water leakage detected! AC stopped."
+    rect rgb(254, 242, 242)
+        Note over ESP,Relay: CRITICAL LEAKAGE DETECTED (Water Level Critical)
+        ESP->>Relay: Immediate Hardware Kill (GPIO 2 LOW)
+        Relay-->>ESP: Compressor Cut Off Instantly
+        ESP->>App: Alert Packet (W:2 Critical)
+        App->>App: Trigger Haptic Alert and Lockout Controls
+        App->>User: Display Emergency Leakage Warning Banner
     end
 
     opt Emergency Resolution
-        User->>ESP: Reservoir emptied & sensor dry
-        ESP->>App: Packet: "T:24.0,H:55.0,W:0\n"
-        App->>App: Unlock UI controls & dismiss alert banner
+        User->>ESP: Reservoir Emptied and Sensor Cleared
+        ESP->>App: Safe Packet (W:0 Normal)
+        App->>App: Dismiss Alert Banner and Unlock Controls
     end
 ```
 
@@ -196,26 +186,20 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    SPLASH["0. Splash Intro\n• Minimalist clean white branding\n• 2.4s silk crossfade\n• Eng. Mahmoud Zayed sign-off"]
-    
-    NAV["Main Shell (Floating Navigation)"]
-
-    TAB1["1. Dashboard Screen\n• Real-Time Dual Gauges (Temp/Hum)\n• Heat Index & Leak State\n• Master AC Switch (ON/OFF)\n• Emergency Alert Banner"]
-    
-    TAB2["2. Climate & Relay\n• Cooling Louver Visualizer\n• Relay Pin Status\n• Manual Start/Stop\n• Console Event Log"]
-    
-    TAB3["3. Water Leakage\n• Acrylic Glass Tank Reservoir\n• 3-Tier Threshold Reference\n• One-Tap Hardware Test Simulator"]
-    
-    TAB4["4. Telemetry Archive\n• Filterable Event Timeline\n• Search Engine\n• Instant A4 PDF Generator"]
-
-    BT["Bluetooth Link Screen\n• Radar Scanner\n• ESP32 Auto-Tag\n• Auto-Reconnect Guard"]
+    SPLASH["0. Splash Screen<br/>Minimalist Light Branding<br/>Eng. Mahmoud Zayed Sign-off"]
+    NAV["Main Shell<br/>Floating Navigation Bar"]
+    TAB1["1. Dashboard<br/>Dual Gauges and Master AC Switch<br/>Emergency Alert Banner"]
+    TAB2["2. Climate Screen<br/>Louver Airflow and Relay State"]
+    TAB3["3. Water Leakage<br/>3-Tier Reservoir Visualizer and Simulator"]
+    TAB4["4. Archive and Reports<br/>Audit Timeline and Signed PDF Export"]
+    BT["Bluetooth Screen<br/>Radar Scanner and Auto-Reconnect"]
 
     SPLASH --> NAV
     NAV --> TAB1
     NAV --> TAB2
     NAV --> TAB3
     NAV --> TAB4
-    TAB1 -.->|Tap Connection Chip| BT
+    TAB1 -.->|Tap Status Chip| BT
 ```
 
 ---
