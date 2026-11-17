@@ -58,6 +58,10 @@ class SensorData extends ChangeNotifier {
   bool _hasActiveAlert = false;
   String _lastAlertMessage = '';
   DateTime? _lastAlertTime;
+  DateTime? _lastTempAlertTime;
+  DateTime? _lastHumidityAlertTime;
+  DateTime? _lastFreonAlertTime;
+  DateTime? _lastFanAlertTime;
 
   final List<LogEntry> _logs = [];
   int _logCounter = 0;
@@ -193,11 +197,41 @@ class SensorData extends ChangeNotifier {
       addLog('Temperature: ${val.toStringAsFixed(1)}°C');
     }
     _temperature = val;
+
+    // Abnormal Temperature Alerts
+    final now = DateTime.now();
+    if (_acOn && val > 32.0) {
+      if (_lastTempAlertTime == null || now.difference(_lastTempAlertTime!).inSeconds > 25) {
+        _hasActiveAlert = true;
+        _lastAlertMessage = 'WARNING: High Supply Air Temperature (${val.toStringAsFixed(1)}°C) detected while AC is running! Check cooling loop.';
+        _lastAlertTime = now;
+        _lastTempAlertTime = now;
+        addLog('ALERT: High supply air temp (${val.toStringAsFixed(1)}°C)');
+      }
+    } else if (_acOn && val < 4.0 && val > 0.0) {
+      if (_lastTempAlertTime == null || now.difference(_lastTempAlertTime!).inSeconds > 25) {
+        _hasActiveAlert = true;
+        _lastAlertMessage = 'WARNING: Evaporator coil freeze-up risk (${val.toStringAsFixed(1)}°C)! Potential ice formation.';
+        _lastAlertTime = now;
+        _lastTempAlertTime = now;
+        addLog('ALERT: Low freezing temp (${val.toStringAsFixed(1)}°C)');
+      }
+    }
     notifyListeners();
   }
 
   void updateHumidity(double val) {
     _humidity = val;
+    final now = DateTime.now();
+    if (val > 80.0) {
+      if (_lastHumidityAlertTime == null || now.difference(_lastHumidityAlertTime!).inSeconds > 30) {
+        _hasActiveAlert = true;
+        _lastAlertMessage = 'WARNING: Excessively high humidity (${val.toStringAsFixed(1)}%)! Elevated condensate drip and mold formation risk.';
+        _lastAlertTime = now;
+        _lastHumidityAlertTime = now;
+        addLog('ALERT: Extreme humidity (${val.toStringAsFixed(1)}%)');
+      }
+    }
     notifyListeners();
   }
 
@@ -265,11 +299,36 @@ class SensorData extends ChangeNotifier {
     if (returnTemp != null) _returnTemperature = returnTemp;
 
     // Check for critical electrical overload fault (Locked Rotor / Bad Capacitor)
+    final now = DateTime.now();
     if (_compressorCurrent > 8.0 && _acOn) {
       _hasActiveAlert = true;
       _lastAlertMessage = 'CRITICAL OVERLOAD: Compressor current exceeded 8.0A (${_compressorCurrent.toStringAsFixed(1)}A)! Potential locked rotor.';
-      _lastAlertTime = DateTime.now();
+      _lastAlertTime = now;
       addLog('CRITICAL: Compressor overcurrent (${_compressorCurrent.toStringAsFixed(1)}A)');
+    } else if (_compressorCurrent < 3.2 && _compressorCurrent > 0.4 && deltaT < 7.0 && _acOn) {
+      if (_lastFreonAlertTime == null || now.difference(_lastFreonAlertTime!).inSeconds > 25) {
+        _hasActiveAlert = true;
+        _lastAlertMessage = 'WARNING: Refrigerant underload detected (${_compressorCurrent.toStringAsFixed(1)}A, ΔT: ${deltaT.toStringAsFixed(1)}°C)! Potential Freon leak.';
+        _lastAlertTime = now;
+        _lastFreonAlertTime = now;
+        addLog('WARNING: Freon leak underload (${_compressorCurrent.toStringAsFixed(1)}A, ΔT: ${deltaT.toStringAsFixed(1)}°C)');
+      }
+    } else if (_indoorFanCurrent > 0.75 && _acOn) {
+      if (_lastFanAlertTime == null || now.difference(_lastFanAlertTime!).inSeconds > 20) {
+        _hasActiveAlert = true;
+        _lastAlertMessage = 'WARNING: Indoor Blower Fan Overcurrent (${_indoorFanCurrent.toStringAsFixed(2)}A)! Inspect motor bearings.';
+        _lastAlertTime = now;
+        _lastFanAlertTime = now;
+        addLog('WARNING: Indoor blower overload (${_indoorFanCurrent.toStringAsFixed(2)}A)');
+      }
+    } else if (_outdoorFanCurrent < 0.05 && _acOn) {
+      if (_lastFanAlertTime == null || now.difference(_lastFanAlertTime!).inSeconds > 20) {
+        _hasActiveAlert = true;
+        _lastAlertMessage = 'CRITICAL: Outdoor Condenser Fan Stalled (0.0A)! Risk of severe head pressure buildup.';
+        _lastAlertTime = now;
+        _lastFanAlertTime = now;
+        addLog('CRITICAL: Outdoor condenser fan stalled (0.0A)');
+      }
     }
     notifyListeners();
   }

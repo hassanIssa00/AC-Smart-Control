@@ -163,7 +163,7 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            'Approved by Eng. Mahmoud Zayed',
+                            'Certified Diagnostics & Telemetry Audit',
                             style: GoogleFonts.plusJakartaSans(
                               color: Colors.white.withValues(alpha: 0.85),
                               fontSize: 11.5,
@@ -423,6 +423,15 @@ class _ArchiveScreenState extends State<ArchiveScreen> {
             : 'ESP32_AC_SMART',
         currentTemp: sensor.temperature,
         currentHumidity: sensor.humidity,
+        returnTemp: sensor.returnTemperature,
+        deltaT: sensor.deltaT,
+        compressorCurrent: sensor.compressorCurrent,
+        indoorFanCurrent: sensor.indoorFanCurrent,
+        outdoorFanCurrent: sensor.outdoorFanCurrent,
+        healthIndex: sensor.systemHealthIndex,
+        systemStatus: sensor.systemStatus,
+        waterLevel: sensor.waterLevel,
+        acState: sensor.acOn,
       );
     } catch (e) {
       if (mounted) {

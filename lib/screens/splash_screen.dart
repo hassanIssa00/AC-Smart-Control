@@ -183,7 +183,7 @@ class _SplashScreenState extends State<SplashScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Supervised by Eng. Mahmoud Zayed',
+                        'Smart HVAC Condition Monitoring & Safety',
                         style: GoogleFonts.plusJakartaSans(
                           color: AppTheme.textPrimary,
                           fontSize: 12,
