@@ -205,6 +205,18 @@ class BluetoothService extends ChangeNotifier {
                         : WaterLevel.normal,
               );
               break;
+            case 'C':
+              sensorData.updateElectrical(compressor: val);
+              break;
+            case 'FI':
+              sensorData.updateElectrical(fanIn: val);
+              break;
+            case 'FO':
+              sensorData.updateElectrical(fanOut: val);
+              break;
+            case 'TR':
+              sensorData.updateElectrical(returnTemp: val);
+              break;
           }
         }
       }

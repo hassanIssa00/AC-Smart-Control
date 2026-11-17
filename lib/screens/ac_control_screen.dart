@@ -7,6 +7,7 @@ import '../services/bluetooth_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/widgets.dart';
 import '../widgets/interactive_climate_widgets.dart';
+import 'diagnostics_screen.dart';
 
 class AcControlScreen extends StatelessWidget {
   final bool isEmbedded;
@@ -344,6 +345,73 @@ class AcControlScreen extends StatelessWidget {
                         ),
                       ],
                     ).animate().fadeIn(delay: 300.ms),
+
+                    const SizedBox(height: 16),
+
+                    // Electrical & Freon Diagnostics Quick Access
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const DiagnosticsScreen()),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          boxShadow: AppTheme.cardShadow,
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0284C7).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.analytics_rounded, color: Color(0xFF0284C7), size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'HVAC Health & Amperage',
+                                        style: GoogleFonts.plusJakartaSans(
+                                          color: AppTheme.textPrimary,
+                                          fontSize: 12.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        '${sensor.totalCurrent.toStringAsFixed(1)}A Total',
+                                        style: GoogleFonts.orbitron(
+                                          color: const Color(0xFF0284C7),
+                                          fontSize: 10.5,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Text(
+                                    'Compressor load, fan speeds & Freon status',
+                                    style: GoogleFonts.plusJakartaSans(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward_ios_rounded, color: AppTheme.textMuted, size: 14),
+                          ],
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 320.ms),
 
                     const SizedBox(height: 16),
 

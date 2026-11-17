@@ -11,6 +11,7 @@ import 'water_level_screen.dart';
 import 'ac_control_screen.dart';
 import 'bluetooth_screen.dart';
 import 'archive_screen.dart';
+import 'diagnostics_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final bool isEmbedded;
@@ -166,6 +167,93 @@ class DashboardScreen extends StatelessWidget {
                   .animate()
                   .fadeIn(delay: 300.ms)
                   .slideY(begin: 0.1),
+
+              const SizedBox(height: 24),
+
+              // ── Featured HVAC Fault & Power Diagnostics Banner ───────────
+              GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const DiagnosticsScreen()),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF0F172A).withValues(alpha: 0.15),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF00E5FF).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.analytics_rounded, color: Color(0xFF00E5FF), size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  'AI HEALTH & DIAGNOSTICS',
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.white,
+                                    fontSize: 12.5,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    '${sensor.systemHealthIndex}%',
+                                    style: GoogleFonts.orbitron(
+                                      color: const Color(0xFF00E5FF),
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              'Current Sensors • Freon Health • Predictive Faults',
+                              style: GoogleFonts.plusJakartaSans(
+                                color: const Color(0xFF94A3B8),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
+                    ],
+                  ),
+                ),
+              ).animate().fadeIn(delay: 320.ms),
 
               const SizedBox(height: 24),
 
