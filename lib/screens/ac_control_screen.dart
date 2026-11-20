@@ -348,7 +348,7 @@ class AcControlScreen extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // Electrical & Freon Diagnostics Quick Access
+                    // Thermodynamics & Freon Diagnostics Quick Access
                     GestureDetector(
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const DiagnosticsScreen()),
@@ -379,7 +379,7 @@ class AcControlScreen extends StatelessWidget {
                                   Row(
                                     children: [
                                       Text(
-                                        'HVAC Health & Amperage',
+                                        'HVAC Health & Diagnostics',
                                         style: GoogleFonts.plusJakartaSans(
                                           color: AppTheme.textPrimary,
                                           fontSize: 12.5,
@@ -388,7 +388,7 @@ class AcControlScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(width: 6),
                                       Text(
-                                        '${sensor.totalCurrent.toStringAsFixed(1)}A Total',
+                                        '${sensor.systemHealthIndex}% Score',
                                         style: GoogleFonts.orbitron(
                                           color: const Color(0xFF0284C7),
                                           fontSize: 10.5,
@@ -398,7 +398,7 @@ class AcControlScreen extends StatelessWidget {
                                     ],
                                   ),
                                   Text(
-                                    'Compressor load, fan speeds & Freon status',
+                                    'Delta-T cooling efficiency & Freon status',
                                     style: GoogleFonts.plusJakartaSans(
                                       color: AppTheme.textSecondary,
                                       fontSize: 11,

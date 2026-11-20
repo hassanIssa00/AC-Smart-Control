@@ -22,7 +22,7 @@ The system addresses the critical problem of **unnoticed condensate drainage fai
 4. One-touch master compressor relay switching directly from the mobile dashboard.
 5. Automated multi-page A4 engineering PDF telemetry report generation.
 
-**Engineering Supervision & Approval:** `Eng. Mahmoud Zayed`  
+**Engineering Project:** `Smart HVAC Condition Monitoring & Control`  
 **System Architecture & Development:** `Hassan Issa`
 
 ---
@@ -186,7 +186,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    SPLASH["0. Splash Screen<br/>Minimalist Light Branding<br/>Eng. Mahmoud Zayed Sign-off"]
+    SPLASH["0. Splash Screen<br/>Minimalist Light Branding<br/>Smart HVAC Condition Monitoring"]
     NAV["Main Shell<br/>Floating Navigation Bar"]
     TAB1["1. Dashboard<br/>Dual Gauges and Master AC Switch<br/>Emergency Alert Banner"]
     TAB2["2. Climate Screen<br/>Louver Airflow and Relay State"]
@@ -277,14 +277,13 @@ The built-in PDF service generates a professional, high-resolution engineering r
 - Formal incident audit metadata (device MAC, export timestamp, operator ID).
 - Color-coded KPI summary cards (Avg Temperature, Peak Temperature, Leak Incident Count).
 - Complete chronologically ordered tabular telemetry history.
-- Verification badge: **Supervised and Approved by Eng. Mahmoud Zayed**.
+- Verification badge: **Automated Cryptographic Certification & Official Audit Log**.
 
 ---
 
 ## 👨‍💻 Project Authors & Credits
 
 * **System Design & Implementation:** Hassan Issa ([@hassanIssa00](https://github.com/hassanIssa00))
-* **Engineering Supervisor:** Eng. Mahmoud Zayed
 * **Repository:** [https://github.com/hassanIssa00/AC-Smart-Control](https://github.com/hassanIssa00/AC-Smart-Control)
 * **Direct APK Downloads:** [Releases Page](https://github.com/hassanIssa00/AC-Smart-Control/releases/tag/v1.0.0)
 

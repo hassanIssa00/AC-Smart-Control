@@ -1,4 +1,4 @@
-// Microsoft Visual C++ generated resource script.
+﻿// Microsoft Visual C++ generated resource script.
 //
 #pragma code_page(65001)
 #include "resource.h"
@@ -89,11 +89,11 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.eng.mahmoudzayed" "\0"
+            VALUE "CompanyName", "com.hvac" "\0"
             VALUE "FileDescription", "ac_smart_control" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
             VALUE "InternalName", "ac_smart_control" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.eng.mahmoudzayed. All rights reserved." "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.hvac. All rights reserved." "\0"
             VALUE "OriginalFilename", "ac_smart_control.exe" "\0"
             VALUE "ProductName", "ac_smart_control" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"

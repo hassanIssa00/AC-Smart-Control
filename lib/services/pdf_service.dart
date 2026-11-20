@@ -13,9 +13,6 @@ class PdfService {
     required double currentHumidity,
     required double returnTemp,
     required double deltaT,
-    required double compressorCurrent,
-    required double indoorFanCurrent,
-    required double outdoorFanCurrent,
     required int healthIndex,
     required String systemStatus,
     required WaterLevel waterLevel,
@@ -94,7 +91,7 @@ class PdfService {
                     ),
                     pw.SizedBox(height: 3),
                     pw.Text(
-                      'Predictive Fault Diagnostics, Thermodynamic Delta-T & Electrical Safety Log',
+                      'Predictive Fault Diagnostics, Thermodynamic Delta-T & Climate Safety Log',
                       style: pw.TextStyle(
                         color: PdfColor.fromHex('#94A3B8'),
                         fontSize: 8.5,
@@ -173,16 +170,17 @@ class PdfService {
                 _buildMetaItem('Audit Timestamp:', nowFormatted),
                 _buildMetaItem('Target Hardware ID:', deviceName),
                 _buildMetaItem('System Health Index:', healthVerdict, color: healthColor),
-                _buildMetaItem('Compressor Operating State:', acState ? 'ENERGIZED (RUNNING)' : 'STANDBY (RELAY OPEN)'),
+                _buildMetaItem('AC Relay State:', acState ? 'ON (RUNNING)' : 'OFF (STANDBY)'),
+                _buildMetaItem('Water Safety Interlock:', waterLevel == WaterLevel.critical ? 'LOCKOUT ACTIVE' : 'SAFE / ARMED'),
               ],
             ),
           ),
 
           pw.SizedBox(height: 12),
 
-          // ─── 2. Real-Time Electrical & Thermodynamic Snapshot ───────────
+          // ─── 2. Real-Time Thermodynamics & Climate Snapshot ────────────
           pw.Text(
-            '1. ELECTRICAL CURRENT CHANNELS & THERMODYNAMICS SNAPSHOT',
+            '1. THERMODYNAMICS & CLIMATE SAFETY SNAPSHOT',
             style: pw.TextStyle(
               fontSize: 9.5,
               fontWeight: pw.FontWeight.bold,
@@ -195,47 +193,25 @@ class PdfService {
             children: [
               pw.Expanded(
                 child: _buildChannelBox(
-                  title: 'AC Compressor (I_comp)',
-                  value: '${compressorCurrent.toStringAsFixed(1)} A',
-                  subtext: 'Rated: 3.5A - 7.5A',
-                  status: compressorCurrent > 8.0
-                      ? 'DANGER: Overload / Locked Rotor'
-                      : (acState && compressorCurrent > 0.4 && compressorCurrent < 3.2
-                          ? 'WARNING: Underload (Freon Leak)'
-                          : (acState ? 'Optimal Compression' : 'Relay Disengaged')),
-                  statusColor: compressorCurrent > 8.0
+                  title: 'AC Supply Air Temp',
+                  value: currentTemp > 0 ? '${currentTemp.toStringAsFixed(1)} °C' : '--',
+                  subtext: 'Optimal: 10.0°C - 18.0°C',
+                  status: currentTemp > 32.0
+                      ? 'CRITICAL: High Temp'
+                      : (acState ? 'Optimal Cooling' : 'Standby'),
+                  statusColor: currentTemp > 32.0
                       ? PdfColor.fromHex('#DC2626')
-                      : (acState && compressorCurrent > 0.4 && compressorCurrent < 3.2
-                          ? PdfColor.fromHex('#D97706')
-                          : PdfColor.fromHex('#16A34A')),
+                      : (acState ? PdfColor.fromHex('#16A34A') : PdfColor.fromHex('#64748B')),
                 ),
               ),
               pw.SizedBox(width: 8),
               pw.Expanded(
                 child: _buildChannelBox(
-                  title: 'Indoor Blower Fan (I_fan_in)',
-                  value: '${indoorFanCurrent.toStringAsFixed(2)} A',
-                  subtext: 'Rated: 0.20A - 0.55A',
-                  status: indoorFanCurrent > 0.75
-                      ? 'Bearing Overload'
-                      : (acState && indoorFanCurrent < 0.05 ? 'Fan Stopped' : 'Optimal Speed'),
-                  statusColor: indoorFanCurrent > 0.75 || (acState && indoorFanCurrent < 0.05)
-                      ? PdfColor.fromHex('#DC2626')
-                      : PdfColor.fromHex('#16A34A'),
-                ),
-              ),
-              pw.SizedBox(width: 8),
-              pw.Expanded(
-                child: _buildChannelBox(
-                  title: 'Outdoor Fan (I_fan_out)',
-                  value: '${outdoorFanCurrent.toStringAsFixed(2)} A',
-                  subtext: 'Rated: 0.50A - 1.10A',
-                  status: outdoorFanCurrent > 1.35
-                      ? 'Motor Overheat'
-                      : (acState && outdoorFanCurrent < 0.05 ? 'Condenser Fan Stalled' : 'Heat Dissipation OK'),
-                  statusColor: outdoorFanCurrent > 1.35 || (acState && outdoorFanCurrent < 0.05)
-                      ? PdfColor.fromHex('#DC2626')
-                      : PdfColor.fromHex('#16A34A'),
+                  title: 'Room Return Air Temp',
+                  value: '${returnTemp.toStringAsFixed(1)} °C',
+                  subtext: 'Ambient Reference',
+                  status: 'Thermal Baseline',
+                  statusColor: PdfColor.fromHex('#0284C7'),
                 ),
               ),
               pw.SizedBox(width: 8),
@@ -243,11 +219,29 @@ class PdfService {
                 child: _buildChannelBox(
                   title: 'Thermodynamics (Delta-T)',
                   value: '${deltaT.toStringAsFixed(1)} °C',
-                  subtext: 'Return: ${returnTemp.toStringAsFixed(1)}°C | Supply: ${currentTemp > 0 ? currentTemp.toStringAsFixed(1) : "--"}°C',
+                  subtext: 'T_return - T_supply',
                   status: deltaT >= 8.0
                       ? 'Freon: Healthy Charge'
                       : (acState ? 'Freon: Low Refrigerant Leak' : 'System Standby'),
-                  statusColor: deltaT >= 8.0 ? PdfColor.fromHex('#16A34A') : PdfColor.fromHex('#D97706'),
+                  statusColor: deltaT >= 8.0
+                      ? PdfColor.fromHex('#16A34A')
+                      : (acState ? PdfColor.fromHex('#D97706') : PdfColor.fromHex('#64748B')),
+                ),
+              ),
+              pw.SizedBox(width: 8),
+              pw.Expanded(
+                child: _buildChannelBox(
+                  title: 'Condensate Drain Pan',
+                  value: waterLevel == WaterLevel.critical
+                      ? 'OVERFLOW'
+                      : (waterLevel == WaterLevel.warning ? 'HIGH' : 'NORMAL'),
+                  subtext: 'Moisture: ${currentHumidity.toStringAsFixed(1)}% RH',
+                  status: waterLevel == WaterLevel.critical
+                      ? 'EMERGENCY LOCKOUT'
+                      : (waterLevel == WaterLevel.warning ? 'Warning (50-80%)' : 'Dry & Safe'),
+                  statusColor: waterLevel == WaterLevel.critical
+                      ? PdfColor.fromHex('#DC2626')
+                      : (waterLevel == WaterLevel.warning ? PdfColor.fromHex('#D97706') : PdfColor.fromHex('#16A34A')),
                 ),
               ),
             ],
@@ -309,11 +303,10 @@ class PdfService {
                   _buildTableHeader('Automated Software Action'),
                 ],
               ),
-              _buildRefTableRow('AC Compressor (SCT-013)', '3.50 A - 7.50 A', '> 8.00 A (Overload)', 'Critical alarm, diagnostic log, health index reduction'),
-              _buildRefTableRow('Indoor Blower Fan (SCT-013)', '0.20 A - 0.55 A', '> 0.75 A (Bearing Seize)', 'Predictive maintenance alert for fan lubrication'),
-              _buildRefTableRow('Outdoor Condenser Fan (SCT-013)', '0.50 A - 1.10 A', '< 0.05 A (Fan Stalled)', 'High head pressure warning, inspect outdoor fan motor'),
-              _buildRefTableRow('Thermodynamic Cooling (Delta-T)', '8.0 °C - 14.0 °C', '< 7.0 °C (Weak Cooling)', 'Low refrigerant leak warning (correlated with compressor load)'),
-              _buildRefTableRow('Condensate Water Drain Pan', '0.00 V (Dry / Normal)', 'Conductivity Detected', 'Instant Hardware Interlock shutdown; relay lock engaged'),
+              _buildRefTableRow('Supply Air Temperature', '10.0 °C - 18.0 °C', '> 32.0 °C (Cooling Loop Fail)', 'Predictive alarm, diagnostic log, health index reduction'),
+              _buildRefTableRow('Thermodynamic Cooling (Delta-T)', '8.0 °C - 14.0 °C', '< 7.0 °C (Weak Cooling)', 'Low refrigerant leak warning, inspect Freon charge'),
+              _buildRefTableRow('Condensate Water Drain Pan', 'Normal (Dry Pan)', 'Conductivity Detected (Overflow)', 'Instant Hardware Interlock shutdown; relay locked open'),
+              _buildRefTableRow('Relative Room Humidity', '40.0 % - 65.0 %', '> 80.0 % (Excess Moisture)', 'Elevated condensate accumulation warning, recommend Dry mode'),
             ],
           ),
 
@@ -620,9 +613,6 @@ class PdfService {
     required double currentHumidity,
     required double returnTemp,
     required double deltaT,
-    required double compressorCurrent,
-    required double indoorFanCurrent,
-    required double outdoorFanCurrent,
     required int healthIndex,
     required String systemStatus,
     required WaterLevel waterLevel,
@@ -635,9 +625,6 @@ class PdfService {
       currentHumidity: currentHumidity,
       returnTemp: returnTemp,
       deltaT: deltaT,
-      compressorCurrent: compressorCurrent,
-      indoorFanCurrent: indoorFanCurrent,
-      outdoorFanCurrent: outdoorFanCurrent,
       healthIndex: healthIndex,
       systemStatus: systemStatus,
       waterLevel: waterLevel,

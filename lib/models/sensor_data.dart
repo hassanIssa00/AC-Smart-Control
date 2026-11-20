@@ -2,8 +2,6 @@ import 'package:flutter/foundation.dart';
 
 enum WaterLevel { normal, warning, critical }
 enum FreonStatus { optimal, lowRefrigerant, evaluating, standby }
-enum CompressorHealth { normal, lockedRotorOverload, idle }
-enum FanHealth { normal, overcurrent, stopped }
 
 class LogEntry {
   final String id;
@@ -12,7 +10,6 @@ class LogEntry {
   final double humidity;
   final WaterLevel waterLevel;
   final bool acState;
-  final double currentDraw;
   final String note;
 
   LogEntry({
@@ -22,7 +19,6 @@ class LogEntry {
     required this.humidity,
     required this.waterLevel,
     required this.acState,
-    this.currentDraw = 0.0,
     required this.note,
   });
 
@@ -48,10 +44,7 @@ class SensorData extends ChangeNotifier {
   String _connectedDevice = '';
   String _systemStatus = 'Offline — Connect Bluetooth';
 
-  // Electrical Current Draw Telemetry (Amperes)
-  double _compressorCurrent = 0.0;
-  double _indoorFanCurrent = 0.0;
-  double _outdoorFanCurrent = 0.0;
+  // Thermodynamic Telemetry
   double _returnTemperature = 26.5; // Room Return Air Temp
 
   // Active Alert Notification state
@@ -60,8 +53,6 @@ class SensorData extends ChangeNotifier {
   DateTime? _lastAlertTime;
   DateTime? _lastTempAlertTime;
   DateTime? _lastHumidityAlertTime;
-  DateTime? _lastFreonAlertTime;
-  DateTime? _lastFanAlertTime;
 
   final List<LogEntry> _logs = [];
   int _logCounter = 0;
@@ -84,47 +75,21 @@ class SensorData extends ChangeNotifier {
   List<LogEntry> get logs => List.unmodifiable(_logs);
   bool get hasRealTelemetry => _isConnected && (_temperature > 0.0 || _humidity > 0.0);
 
-  // Electrical & Diagnostics Getters
-  double get compressorCurrent => _compressorCurrent;
-  double get indoorFanCurrent => _indoorFanCurrent;
-  double get outdoorFanCurrent => _outdoorFanCurrent;
+  // Thermodynamics & Diagnostics Getters
   double get returnTemperature => _returnTemperature;
-  double get totalCurrent => _compressorCurrent + _indoorFanCurrent + _outdoorFanCurrent;
   double get deltaT => (_returnTemperature > _temperature && _temperature > 0.0)
       ? (_returnTemperature - _temperature)
       : 0.0;
 
   FreonStatus get freonStatus {
     if (!_isConnected || !_acOn) return FreonStatus.standby;
-    if (_compressorCurrent > 0.4 && _compressorCurrent < 3.2 && deltaT < 7.0) {
+    if (deltaT < 7.0 && deltaT > 0.0) {
       return FreonStatus.lowRefrigerant;
     }
-    if (_compressorCurrent >= 3.2) {
+    if (deltaT >= 7.0) {
       return FreonStatus.optimal;
     }
     return FreonStatus.evaluating;
-  }
-
-  CompressorHealth get compressorHealth {
-    if (!_isConnected || !_acOn) return CompressorHealth.idle;
-    if (_compressorCurrent > 8.0) {
-      return CompressorHealth.lockedRotorOverload;
-    }
-    return CompressorHealth.normal;
-  }
-
-  FanHealth get indoorFanHealth {
-    if (!_isConnected || !_acOn) return FanHealth.normal;
-    if (_indoorFanCurrent > 0.75) return FanHealth.overcurrent;
-    if (_indoorFanCurrent < 0.05 && _acOn) return FanHealth.stopped;
-    return FanHealth.normal;
-  }
-
-  FanHealth get outdoorFanHealth {
-    if (!_isConnected || !_acOn) return FanHealth.normal;
-    if (_outdoorFanCurrent > 1.35) return FanHealth.overcurrent;
-    if (_outdoorFanCurrent < 0.05 && _acOn) return FanHealth.stopped;
-    return FanHealth.normal;
   }
 
   int get systemHealthIndex {
@@ -136,10 +101,8 @@ class SensorData extends ChangeNotifier {
       score -= 20;
     }
 
-    if (compressorHealth == CompressorHealth.lockedRotorOverload) score -= 40;
-    if (freonStatus == FreonStatus.lowRefrigerant) score -= 25;
-    if (indoorFanHealth != FanHealth.normal) score -= 15;
-    if (outdoorFanHealth != FanHealth.normal) score -= 15;
+    if (freonStatus == FreonStatus.lowRefrigerant) score -= 30;
+    if (_temperature > 32.0 && _acOn) score -= 20;
 
     return score.clamp(5, 100);
   }
@@ -177,7 +140,6 @@ class SensorData extends ChangeNotifier {
       humidity: _humidity,
       waterLevel: _waterLevel,
       acState: _acOn,
-      currentDraw: totalCurrent,
       note: note,
     );
     _logs.insert(0, entry);
@@ -275,9 +237,6 @@ class SensorData extends ChangeNotifier {
       _systemStatus = 'Offline — Connect Bluetooth';
       _temperature = 0.0;
       _humidity = 0.0;
-      _compressorCurrent = 0.0;
-      _indoorFanCurrent = 0.0;
-      _outdoorFanCurrent = 0.0;
       _acOn = false;
       _relayOn = false;
       addLog('Bluetooth disconnected');
@@ -285,51 +244,8 @@ class SensorData extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ─── Electrical Current Updates (from BT telemetry stream) ─────────────────
-
-  void updateElectrical({
-    double? compressor,
-    double? fanIn,
-    double? fanOut,
-    double? returnTemp,
-  }) {
-    if (compressor != null) _compressorCurrent = compressor;
-    if (fanIn != null) _indoorFanCurrent = fanIn;
-    if (fanOut != null) _outdoorFanCurrent = fanOut;
-    if (returnTemp != null) _returnTemperature = returnTemp;
-
-    // Check for critical electrical overload fault (Locked Rotor / Bad Capacitor)
-    final now = DateTime.now();
-    if (_compressorCurrent > 8.0 && _acOn) {
-      _hasActiveAlert = true;
-      _lastAlertMessage = 'CRITICAL OVERLOAD: Compressor current exceeded 8.0A (${_compressorCurrent.toStringAsFixed(1)}A)! Potential locked rotor.';
-      _lastAlertTime = now;
-      addLog('CRITICAL: Compressor overcurrent (${_compressorCurrent.toStringAsFixed(1)}A)');
-    } else if (_compressorCurrent < 3.2 && _compressorCurrent > 0.4 && deltaT < 7.0 && _acOn) {
-      if (_lastFreonAlertTime == null || now.difference(_lastFreonAlertTime!).inSeconds > 25) {
-        _hasActiveAlert = true;
-        _lastAlertMessage = 'WARNING: Refrigerant underload detected (${_compressorCurrent.toStringAsFixed(1)}A, ΔT: ${deltaT.toStringAsFixed(1)}°C)! Potential Freon leak.';
-        _lastAlertTime = now;
-        _lastFreonAlertTime = now;
-        addLog('WARNING: Freon leak underload (${_compressorCurrent.toStringAsFixed(1)}A, ΔT: ${deltaT.toStringAsFixed(1)}°C)');
-      }
-    } else if (_indoorFanCurrent > 0.75 && _acOn) {
-      if (_lastFanAlertTime == null || now.difference(_lastFanAlertTime!).inSeconds > 20) {
-        _hasActiveAlert = true;
-        _lastAlertMessage = 'WARNING: Indoor Blower Fan Overcurrent (${_indoorFanCurrent.toStringAsFixed(2)}A)! Inspect motor bearings.';
-        _lastAlertTime = now;
-        _lastFanAlertTime = now;
-        addLog('WARNING: Indoor blower overload (${_indoorFanCurrent.toStringAsFixed(2)}A)');
-      }
-    } else if (_outdoorFanCurrent < 0.05 && _acOn) {
-      if (_lastFanAlertTime == null || now.difference(_lastFanAlertTime!).inSeconds > 20) {
-        _hasActiveAlert = true;
-        _lastAlertMessage = 'CRITICAL: Outdoor Condenser Fan Stalled (0.0A)! Risk of severe head pressure buildup.';
-        _lastAlertTime = now;
-        _lastFanAlertTime = now;
-        addLog('CRITICAL: Outdoor condenser fan stalled (0.0A)');
-      }
-    }
+  void updateReturnTemperature(double val) {
+    _returnTemperature = val;
     notifyListeners();
   }
 
@@ -359,57 +275,6 @@ class SensorData extends ChangeNotifier {
     _relayOn = false;
     _systemStatus = 'AC Stopped';
     addLog('AC turned OFF (Relay cut off)');
-    notifyListeners();
-  }
-
-  /// Scenario injector for evaluations, defenses, and lab demonstrations.
-  void simulateDiagnosticScenario(String scenario) {
-    _isConnected = true;
-    _connectedDevice = 'ESP32_HVAC_DEMO';
-    _acOn = true;
-    _relayOn = true;
-    _waterLevel = WaterLevel.normal;
-    _returnTemperature = 26.5;
-
-    if (scenario == 'NORMAL') {
-      _temperature = 14.5;
-      _compressorCurrent = 5.4;
-      _indoorFanCurrent = 0.38;
-      _outdoorFanCurrent = 0.85;
-      _hasActiveAlert = false;
-      _systemStatus = 'AC Running — Optimal Condition';
-      addLog('DEMO: Injected Normal Operation State (5.4A, ΔT=12.0°C)');
-    } else if (scenario == 'LOW_FREON') {
-      _temperature = 22.0;
-      _compressorCurrent = 2.1;
-      _indoorFanCurrent = 0.38;
-      _outdoorFanCurrent = 0.85;
-      _hasActiveAlert = true;
-      _lastAlertMessage = 'WARNING: Refrigerant underload detected (2.1A, ΔT=4.5°C). Potential Freon leak!';
-      _lastAlertTime = DateTime.now();
-      _systemStatus = 'WARNING — Low Freon / Refrigerant Leak';
-      addLog('DEMO: Injected Low Freon Leak State (2.1A, ΔT=4.5°C)');
-    } else if (scenario == 'OVERLOAD') {
-      _temperature = 18.0;
-      _compressorCurrent = 9.6;
-      _indoorFanCurrent = 0.42;
-      _outdoorFanCurrent = 0.88;
-      _hasActiveAlert = true;
-      _lastAlertMessage = 'CRITICAL OVERLOAD: Compressor current 9.6A exceeded limit! Locked rotor / bad capacitor.';
-      _lastAlertTime = DateTime.now();
-      _systemStatus = 'CRITICAL — Compressor Locked Rotor';
-      addLog('DEMO: Injected Overload Locked Rotor State (9.6A)');
-    } else if (scenario == 'FAN_FAULT') {
-      _temperature = 19.5;
-      _compressorCurrent = 5.2;
-      _indoorFanCurrent = 0.95;
-      _outdoorFanCurrent = 0.0;
-      _hasActiveAlert = true;
-      _lastAlertMessage = 'WARNING: Outdoor fan stopped (0.0A) & indoor blower overload (0.95A)!';
-      _lastAlertTime = DateTime.now();
-      _systemStatus = 'WARNING — Fan Motor Failure';
-      addLog('DEMO: Injected Fan Failure & Seizure State');
-    }
     notifyListeners();
   }
 }

@@ -75,16 +75,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               child: Row(
                 children: [
                   // Logo + Title
-                  Container(
-                    padding: const EdgeInsets.all(7),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryLight,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.ac_unit_rounded,
-                      color: AppTheme.primary,
-                      size: 20,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: Image.asset(
+                      'assets/images/app_logo.png',
+                      width: 34,
+                      height: 34,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   const SizedBox(width: 12),

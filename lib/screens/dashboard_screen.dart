@@ -239,7 +239,7 @@ class DashboardScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              'Current Sensors • Freon Health • Predictive Faults',
+                              'Delta-T Thermodynamics • Freon Health • Safety',
                               style: GoogleFonts.plusJakartaSans(
                                 color: const Color(0xFF94A3B8),
                                 fontSize: 11,
